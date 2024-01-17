@@ -73,12 +73,11 @@ __all__ = [
     'read_castep_castep_old',
     'read_cell',
     'read_castep_cell',
-    'read_geom',
     'read_castep_geom',
+    'read_castep_md',
     'read_phonon',
     'read_castep_phonon',
     # additional reads that still need to be wrapped
-    'read_md',
     'read_param',
     'read_seed',
     # write that is already wrapped
@@ -923,17 +922,6 @@ def read_castep_castep_old(fd, index=None):
         return traj[index]
 
 
-def read_geom(filename, index=':', units=units_CODATA2002):
-    """
-    Wrapper function for the more generic read() functionality.
-
-    Note that this is function is intended to maintain backwards-compatibility
-    only. Keyword arguments will be passed to read_castep_geom().
-    """
-    from ase.io import read
-    return read(filename, index=index, format='castep-geom', units=units)
-
-
 def read_castep_geom(fd, index=None, units=units_CODATA2002):
     """Reads a .geom file produced by the CASTEP GeometryOptimization task and
     returns an atoms  object.
@@ -1124,24 +1112,6 @@ def read_castep_phonon(fd, index=None, read_vib_data=False,
         return vibdata, atoms
     else:
         return atoms
-
-
-def read_md(filename, index=None, return_scalars=False,
-            units=units_CODATA2002):
-    """Wrapper function for the more generic read() functionality.
-
-    Note that this function is intended to maintain backwards-compatibility
-    only. For documentation see read_castep_md()
-    """
-    if return_scalars:
-        full_output = True
-    else:
-        full_output = False
-
-    from ase.io import read
-    return read(filename, index=index, format='castep-md',
-                full_output=full_output, return_scalars=return_scalars,
-                units=units)
 
 
 def read_castep_md(fd, index=None, return_scalars=False,
