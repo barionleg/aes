@@ -1183,7 +1183,8 @@ def read_castep_md(fd, index=-1, return_scalars=False, units=units_CODATA2002):
                 pressures.append(pressure)
                 atoms = ase.Atoms(symbols=symbols,
                                   positions=positions,
-                                  cell=cell)
+                                  cell=cell,
+                                  pbc=True)
                 atoms.set_velocities(velocities)
                 if len(stress) == 0:
                     atoms.calc = SinglePointCalculator(
