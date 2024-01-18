@@ -1,5 +1,6 @@
 """Parsers for CASTEP .geom, .md, .ts files"""
-from typing import Dict, Sequence, Optional, Union, TextIO
+from math import sqrt
+from typing import Callable, Dict, List, Optional, Sequence, TextIO, Union
 
 import numpy as np
 from ase import Atoms
@@ -7,222 +8,270 @@ from ase.io.formats import string2index
 from ase.utils import reader, writer
 
 
+class Parser:
+    """Parser for <-- `key` in .geom, .md, .ts files"""
+    def __init__(self, units: Optional[Dict[str, float]] = None):
+        if units is None:
+            from ase.io.castep import units_CODATA2002
+            self.units = units_CODATA2002
+        else:
+            self.units = units
+
+    def parse(self, lines: List[str], key: str, method: Callable):
+        """Parse <-- `key` in `lines` using `method`"""
+        tmp = [_ for _ in lines if _.strip().endswith(key)]
+        if len(tmp):
+            return method(tmp, self.units)
+        return None
+
+
 @reader
-def read_castep_geom(fd, index=-1, units=None):
-    """Reads a .geom file produced by the CASTEP GeometryOptimization task and
-    returns an atoms  object.
-    The information about total free energy and forces of each atom for every
-    relaxation step will be stored for further analysis especially in a
-    single-point calculator.
-    Note that everything in the .geom file is in atomic units, which has
-    been conversed to commonly used unit angstrom(length) and eV (energy).
+def read_castep_geom(
+    fd: TextIO,
+    index: Union[int, slice, str] = -1,
+    units: Optional[Dict[str, float]] = None,
+):
+    """Read a .geom file written by the CASTEP GeometryOptimization task
 
-    Note that the index argument has no effect as of now.
+    Original contribution by Wei-Bing Zhang. Thanks!
 
-    Contribution by Wei-Bing Zhang. Thanks!
+    Parameters
+    ----------
+    fd : str | TextIO
+        File name or object (possibly compressed with .gz and .bz2) to be read.
+    index : int | slice | str, default: -1
+        Index of image to be read.
+    units : dict[str, float], default: None
+        Dictionary with conversion factors from atomic units to ASE units.
 
-    Routine now accepts a filedescriptor in order to out-source the gz and
-    bz2 handling to formats.py. Note that there is a fallback routine
-    read_geom() that behaves like previous versions did.
+        - ``Eh``: Hartree energy in eV
+        - ``a0``: Bohr radius in Å
+        - ``me``: electron mass in Da
+
+        If None, values based on CODATA2002 are used.
+
+    Returns
+    -------
+    Atoms | list[Atoms]
+        ASE Atoms object or list of them.
+
+    Notes
+    -----
+    The force-consistent energy, forces, stress are stored in ``atoms.calc``.
+
+    Everything in the .geom file is in atomic units.
+    They are converted in ASE units, i.e., Å (length), eV (energy), Da (mass).
     """
-    from ase.calculators.singlepoint import SinglePointCalculator
-
     if isinstance(index, str):
         index = string2index(index)
+    if isinstance(index, str):
+        raise ValueError(index)
+    return list(iread_castep_geom(fd, units))[index]
 
-    if units is None:
-        from ase.io.castep import units_CODATA2002
-        units = units_CODATA2002
 
-    # fd is closed by embracing read() routine
-    txt = fd.readlines()
+def iread_castep_geom(fd: TextIO, units: Optional[Dict[str, float]] = None):
+    """Read a .geom file of CASTEP GeometryOptimization as a generator"""
+    parser = Parser(units)
+    _read_header(fd)
+    lines = []
+    for line in fd:
+        if line.strip():
+            lines.append(line)
+        else:
+            yield _read_atoms_geom(lines, parser)
+            lines = []
 
-    traj = []
 
-    Hartree = units['Eh']
-    Bohr = units['a0']
+def _read_atoms_geom(lines: List[str], parser: Parser):
+    from ase.calculators.singlepoint import SinglePointCalculator
 
-    for i, line in enumerate(txt):
-        if line.find('<-- E') > 0:
-            start_found = True
-            energy = float(line.split()[0]) * Hartree
-            cell = [x.split()[0:3] for x in txt[i + 1:i + 4]]
-            cell = np.array([[float(col) * Bohr for col in row] for row in
-                             cell])
-        if line.find('<-- R') > 0 and start_found:
-            start_found = False
-            geom_start = i
-            for i, line in enumerate(txt[geom_start:]):
-                if line.find('<-- F') > 0:
-                    geom_stop = i + geom_start
-                    break
-            species = [line.split()[0] for line in
-                       txt[geom_start:geom_stop]]
-            geom = np.array([[float(col) * Bohr for col in
-                              line.split()[2:5]] for line in
-                             txt[geom_start:geom_stop]])
-            forces = np.array([[float(col) * Hartree / Bohr for col in
-                                line.split()[2:5]] for line in
-                               txt[geom_stop:geom_stop
-                                   + (geom_stop - geom_start)]])
-            image = Atoms(species, geom, cell=cell, pbc=True)
-            # The energy in .geom or .md file is the force-consistent one
-            # (possibly with the the finite-basis-set correction when, e.g.,
-            # finite_basis_corr!=0 in GeometryOptimisation).
-            # It should therefore be reasonable to assign it to `free_energy`.
-            # Be also aware that the energy in .geom file not 0K extrapolated.
-            image.calc = SinglePointCalculator(
-                atoms=image, free_energy=energy, forces=forces)
-            traj.append(image)
+    energy = parser.parse(lines, '<-- E', _read_energies)
+    cell = parser.parse(lines, '<-- h', _read_cell)
+    stress = parser.parse(lines, '<-- S', _read_stress)
+    symbols, positions = parser.parse(lines, '<-- R', _read_positions)
+    forces = parser.parse(lines, '<-- F', _read_forces)
 
-    return traj[index]
+    atoms = Atoms(symbols, positions, cell=cell, pbc=True)
+    # The energy in .geom or .md file is the force-consistent one
+    # (possibly with the the finite-basis-set correction when, e.g.,
+    # finite_basis_corr!=0 in GeometryOptimisation).
+    # It should therefore be reasonable to assign it to `free_energy`.
+    # Be also aware that the energy in .geom file not 0K extrapolated.
+    atoms.calc = SinglePointCalculator(
+        atoms=atoms,
+        free_energy=energy,
+        forces=forces,
+        stress=stress,
+    )
+    return atoms
 
 
 @reader
-def read_castep_md(fd, index=-1, return_scalars=False, units=None):
-    """Reads a .md file written by a CASTEP MolecularDynamics task
-    and returns the trajectory stored therein as a list of atoms object.
+def read_castep_md(
+    fd: TextIO,
+    index: Union[int, slice, str] = -1,
+    units: Optional[Dict[str, float]] = None,
+):
+    """Read a .md file written by the CASTEP MolecularDynamics task
 
-    Note that the index argument has no effect as of now."""
+    Parameters
+    ----------
+    fd : str | TextIO
+        File name or object (possibly compressed with .gz and .bz2) to be read.
+    index : int | slice | str, default: -1
+        Index of image to be read.
+    units : dict[str, float], default: None
+        Dictionary with conversion factors from atomic units to ASE units.
 
-    from ase.calculators.singlepoint import SinglePointCalculator
+        - ``Eh``: Hartree energy in eV
+        - ``a0``: Bohr radius in Å
+        - ``me``: electron mass in Da
 
+        If None, values based on CODATA2002 are used.
+
+    Returns
+    -------
+    Atoms | list[Atoms]
+        ASE Atoms object or list of them.
+
+    Notes
+    -----
+    The force-consistent energy, forces, stress are stored in ``atoms.calc``.
+
+    Everything in the .md file is in atomic units.
+    They are converted in ASE units, i.e., Å (length), eV (energy), Da (mass).
+    """
     if isinstance(index, str):
         index = string2index(index)
+    if isinstance(index, str):
+        raise ValueError(index)
+    return list(iread_castep_md(fd, units))[index]
 
-    if units is None:
-        from ase.io.castep import units_CODATA2002
-        units = units_CODATA2002
 
-    factors = {
-        't': units['t0'] * 1E15,     # fs
-        'E': units['Eh'],            # eV
-        'T': units['Eh'] / units['kB'],
-        'P': units['Eh'] / units['a0']**3 * units['Pascal'],
-        'h': units['a0'],
-        'hv': units['a0'] / units['t0'],
-        'S': units['Eh'] / units['a0']**3,
-        'R': units['a0'],
-        'V': np.sqrt(units['Eh'] / units['me']),
-        'F': units['Eh'] / units['a0']}
+def iread_castep_md(fd: TextIO, units: Optional[Dict[str, float]] = None):
+    """Read a .md file of CASTEP MolecularDynamics as a generator"""
+    parser = Parser(units)
+    _read_header(fd)
+    lines = []
+    for line in fd:
+        if line.strip():
+            lines.append(line)
+        else:
+            yield _read_atoms_md(lines, parser)
+            lines = []
 
-    # fd is closed by embracing read() routine
-    lines = fd.readlines()
 
-    L = 0
-    while 'END header' not in lines[L]:
-        L += 1
-    l_end_header = L
-    lines = lines[l_end_header + 1:]
-    times = []
-    energies = []
-    temperatures = []
-    pressures = []
-    traj = []
+def _read_atoms_md(lines: List[str], parser: Parser):
+    from ase.calculators.singlepoint import SinglePointCalculator
 
-    # Initialization
-    time = None
-    Epot = None
-    Ekin = None
-    EH = None
-    temperature = None
-    pressure = None
-    symbols = None
-    positions = None
-    cell = None
-    velocities = None
-    symbols = []
-    positions = []
-    velocities = []
-    forces = []
-    cell = np.eye(3)
-    cell_velocities = []
-    stress = []
+    factor = parser.units['a0'] * sqrt(parser.units['me'] / parser.units['Eh'])
+    time = float(lines[0].split()[0]) * factor  # au -> ASE
 
-    for (L, line) in enumerate(lines):
-        fields = line.split()
-        if len(fields) == 0:
-            if L != 0:
-                times.append(time)
-                energies.append([Epot, EH, Ekin])
-                temperatures.append(temperature)
-                pressures.append(pressure)
-                atoms = Atoms(
-                    symbols=symbols,
-                    positions=positions,
-                    cell=cell,
-                    pbc=True,
-                )
-                atoms.set_velocities(velocities)
-                if len(stress) == 0:
-                    atoms.calc = SinglePointCalculator(
-                        atoms=atoms, free_energy=Epot, forces=forces)
-                else:
-                    atoms.calc = SinglePointCalculator(
-                        atoms=atoms, free_energy=Epot,
-                        forces=forces, stress=stress)
-                traj.append(atoms)
-            symbols = []
-            positions = []
-            velocities = []
-            forces = []
-            cell = []
-            cell_velocities = []
-            stress = []
-            continue
-        if len(fields) == 1:
-            time = factors['t'] * float(fields[0])
-            continue
+    energy = parser.parse(lines, '<-- E', _read_energies)
+    # temperature = parser.parse(lines, '<-- T', _read_temperature)
+    # only printed in case of variable cell calculation or calculate_stress
+    # pressure = parser.parse(lines, '<-- P', _read_pressure)
+    cell = parser.parse(lines, '<-- h', _read_cell)
+    # only printed in case of variable cell calculation
+    # cell_velocities = parser.extract(lines, '<-- hv', _read_cell_velocities)
+    # only printed in case of variable cell calculation
+    stress = parser.parse(lines, '<-- S', _read_stress)
+    symbols, positions = parser.parse(lines, '<-- R', _read_positions)
+    velocities = parser.parse(lines, '<-- V', _read_velocities)
+    forces = parser.parse(lines, '<-- F', _read_forces)
 
-        if fields[-1] == 'E':
-            E = [float(x) for x in fields[0:3]]
-            Epot, EH, Ekin = (factors['E'] * Ei for Ei in E)
-            continue
+    atoms = Atoms(symbols, positions, cell=cell, pbc=True)
+    atoms.info['time'] = time
+    atoms.set_velocities(velocities)
+    atoms.calc = SinglePointCalculator(
+        atoms=atoms,
+        free_energy=energy,
+        forces=forces,
+        stress=stress,
+    )
+    return atoms
 
-        if fields[-1] == 'T':
-            temperature = factors['T'] * float(fields[0])
-            continue
 
-        # only printed in case of variable cell calculation or calculate_stress
-        # explicitly requested
-        if fields[-1] == 'P':
-            pressure = factors['P'] * float(fields[0])
-            continue
-        if fields[-1] == 'h':
-            h = [float(x) for x in fields[0:3]]
-            cell.append([factors['h'] * hi for hi in h])
-            continue
+def _read_header(fd: TextIO):
+    for line in fd:
+        if 'END header' in line:
+            next(fd)  # read blank line below 'END header'
+            break
 
-        # only printed in case of variable cell calculation
-        if fields[-1] == 'hv':
-            hv = [float(x) for x in fields[0:3]]
-            cell_velocities.append([factors['hv'] * hvi for hvi in hv])
-            continue
 
-        # only printed in case of variable cell calculation
-        if fields[-1] == 'S':
-            S = [float(x) for x in fields[0:3]]
-            stress.append([factors['S'] * Si for Si in S])
-            continue
-        if fields[-1] == 'R':
-            symbols.append(fields[0])
-            R = [float(x) for x in fields[2:5]]
-            positions.append([factors['R'] * Ri for Ri in R])
-            continue
-        if fields[-1] == 'V':
-            V = [float(x) for x in fields[2:5]]
-            velocities.append([factors['V'] * Vi for Vi in V])
-            continue
-        if fields[-1] == 'F':
-            F = [float(x) for x in fields[2:5]]
-            forces.append([factors['F'] * Fi for Fi in F])
-            continue
+def _read_energies(lines: List[str], units: Dict[str, float]):
+    """Read force-consistent energy
 
-    if return_scalars:
-        data = [times, energies, temperatures, pressures]
-        return data, traj[index]
-    else:
-        return traj[index]
+    Notes
+    -----
+    Enthalpy and kinetic energy (in .md) are also written in the same line.
+    They are however not parsed because they can be computed using stress and
+    atomic velocties, respsectively.
+    """
+    return float(lines[0].split()[0]) * units['Eh']
+
+
+def _read_temperature(lines: List[str], units: Dict[str, float]):
+    """Read temperature
+
+    Notes
+    -----
+    Temperature can be computed from kinetic energy and hence not necessary.
+    """
+    factor = units['Eh'] / units['kB']  # hartree -> K
+    return float(lines[0].split()[0]) * factor
+
+
+def _read_pressure(lines: List[str], units: Dict[str, float]):
+    """Read pressure
+
+    Notes
+    -----
+    Pressure can be computed from stress and hence not necessary.
+    """
+    factor = units['Eh'] / units['a0']**3  # au -> eV/A3
+    return float(lines[0].split()[0]) * factor
+
+
+def _read_cell(lines: List[str], units: Dict[str, float]):
+    bohr = units['a0']
+    cell = np.array([_.split()[0:3] for _ in lines], dtype=float)
+    return cell * bohr
+
+
+# def _read_cell_velocities(lines: List[str], units: Dict[str, float]):
+#     hartree = units['Eh']
+#     me = units['me']
+#     cell_velocities = np.array([_.split()[0:3] for _ in lines], dtype=float)
+#     return cell_velocities * np.sqrt(hartree / me)
+
+
+def _read_stress(lines: List[str], units: Dict[str, float]):
+    hartree = units['Eh']
+    bohr = units['a0']
+    stress = np.array([_.split()[0:3] for _ in lines], dtype=float)
+    return stress.reshape(-1)[[0, 4, 8, 5, 2, 1]] * (hartree / bohr**3)
+
+
+def _read_positions(lines: List[str], units: Dict[str, float]):
+    bohr = units['a0']
+    symbols = [_.split()[0] for _ in lines]
+    positions = np.array([_.split()[2:5] for _ in lines], dtype=float)
+    return symbols, positions * bohr
+
+
+def _read_velocities(lines: List[str], units: Dict[str, float]):
+    hartree = units['Eh']
+    me = units['me']
+    velocities = np.array([_.split()[2:5] for _ in lines], dtype=float)
+    return velocities * np.sqrt(hartree / me)
+
+
+def _read_forces(lines: List[str], units: Dict[str, float]):
+    hartree = units['Eh']
+    bohr = units['a0']
+    forces = np.array([_.split()[2:5] for _ in lines], dtype=float)
+    return forces * (hartree / bohr)
 
 
 @writer
