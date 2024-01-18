@@ -265,6 +265,9 @@ Thermochemistry:
 
 I/O:
 
+* Add :func:`~ase.io.castep.write_castep_geom` and
+  :func:`~ase.io.castep.write_castep_md` (:mr:`3229`)
+
 * Add support for reading Mulliken, Löwdin, or Hirshfeld atomic charges in
   :func:`ase.io.gaussian.read_gaussian_out` (:mr:`3332`)
 
