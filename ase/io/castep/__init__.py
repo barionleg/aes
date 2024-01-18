@@ -25,6 +25,8 @@ from ase.io.formats import string2index
 from ase.parallel import paropen
 from ase.spacegroup import Spacegroup
 from ase.utils import atoms_to_spglib_cell, reader
+from .geom_md_ts import write_castep_geom, write_castep_md
+
 
 units_ase = {
     'hbar': ase.units._hbar * ase.units.J,
@@ -83,6 +85,8 @@ __all__ = [
     'read_seed',
     # write that is already wrapped
     'write_castep_cell',
+    'write_castep_geom',
+    'write_castep_md',
     # param write - in principle only necessary in junction with the calculator
     'write_param']
 
