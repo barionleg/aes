@@ -954,8 +954,6 @@ def read_castep_geom(fd, index=-1, units=units_CODATA2002):
     Hartree = units['Eh']
     Bohr = units['a0']
 
-    # Yeah, we know that...
-    # print('N.B.: Energy in .geom file is not 0K extrapolated.')
     for i, line in enumerate(txt):
         if line.find('<-- E') > 0:
             start_found = True
@@ -980,8 +978,13 @@ def read_castep_geom(fd, index=-1, units=units_CODATA2002):
                                txt[geom_stop:geom_stop
                                    + (geom_stop - geom_start)]])
             image = ase.Atoms(species, geom, cell=cell, pbc=True)
+            # The energy in .geom or .md file is the force-consistent one
+            # (possibly with the the finite-basis-set correction when, e.g.,
+            # finite_basis_corr!=0 in GeometryOptimisation).
+            # It should therefore be reasonable to assign it to `free_energy`.
+            # Be also aware that the energy in .geom file not 0K extrapolated.
             image.calc = SinglePointCalculator(
-                atoms=image, energy=energy, forces=forces)
+                atoms=image, free_energy=energy, forces=forces)
             traj.append(image)
 
     return traj[index]
@@ -1188,10 +1191,10 @@ def read_castep_md(fd, index=-1, return_scalars=False, units=units_CODATA2002):
                 atoms.set_velocities(velocities)
                 if len(stress) == 0:
                     atoms.calc = SinglePointCalculator(
-                        atoms=atoms, energy=Epot, forces=forces)
+                        atoms=atoms, free_energy=Epot, forces=forces)
                 else:
                     atoms.calc = SinglePointCalculator(
-                        atoms=atoms, energy=Epot,
+                        atoms=atoms, free_energy=Epot,
                         forces=forces, stress=stress)
                 traj.append(atoms)
             symbols = []
