@@ -26,12 +26,15 @@ class Parser:
 
 
 @reader
-def read_castep_geom(
+def _read_images(
     fd: TextIO,
     index: Union[int, slice, str] = -1,
     units: Optional[Dict[str, float]] = None,
 ):
-    """Read a .geom file written by the CASTEP GeometryOptimization task
+    """Read a .geom or a .md file written by CASTEP.
+
+    - .geom: written by the CASTEP GeometryOptimization task
+    - .md: written by the CATSTEP MolecularDynamics task
 
     Original contribution by Wei-Bing Zhang. Thanks!
 
@@ -59,56 +62,18 @@ def read_castep_geom(
     -----
     The force-consistent energy, forces, stress are stored in ``atoms.calc``.
 
-    Everything in the .geom file is in atomic units.
+    Everything in the .geom or the .md file is in atomic units.
     They are converted in ASE units, i.e., Å (length), eV (energy), Da (mass).
     """
     if isinstance(index, str):
         index = string2index(index)
     if isinstance(index, str):
         raise ValueError(index)
-    return list(iread_castep_geom(fd, units))[index]
+    return list(_iread_images(fd, units))[index]
 
 
-@reader
-def read_castep_md(
-    fd: TextIO,
-    index: Union[int, slice, str] = -1,
-    units: Optional[Dict[str, float]] = None,
-):
-    """Read a .md file written by the CASTEP MolecularDynamics task
-
-    Parameters
-    ----------
-    fd : str | TextIO
-        File name or object (possibly compressed with .gz and .bz2) to be read.
-    index : int | slice | str, default: -1
-        Index of image to be read.
-    units : dict[str, float], default: None
-        Dictionary with conversion factors from atomic units to ASE units.
-
-        - ``Eh``: Hartree energy in eV
-        - ``a0``: Bohr radius in Å
-        - ``me``: electron mass in Da
-
-        If None, values based on CODATA2002 are used.
-
-    Returns
-    -------
-    Atoms | list[Atoms]
-        ASE Atoms object or list of them.
-
-    Notes
-    -----
-    The force-consistent energy, forces, stress are stored in ``atoms.calc``.
-
-    Everything in the .md file is in atomic units.
-    They are converted in ASE units, i.e., Å (length), eV (energy), Da (mass).
-    """
-    if isinstance(index, str):
-        index = string2index(index)
-    if isinstance(index, str):
-        raise ValueError(index)
-    return list(iread_castep_md(fd, units))[index]
+read_castep_geom = _read_images
+read_castep_md = _read_images
 
 
 def _iread_images(fd: TextIO, units: Optional[Dict[str, float]] = None):
