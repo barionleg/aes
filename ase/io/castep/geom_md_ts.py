@@ -78,32 +78,8 @@ def iread_castep_geom(fd: TextIO, units: Optional[Dict[str, float]] = None):
         if line.strip():
             lines.append(line)
         else:
-            yield _read_atoms_geom(lines, parser)
+            yield _read_atoms(lines, parser)
             lines = []
-
-
-def _read_atoms_geom(lines: List[str], parser: Parser):
-    from ase.calculators.singlepoint import SinglePointCalculator
-
-    energy = parser.parse(lines, '<-- E', _read_energies)
-    cell = parser.parse(lines, '<-- h', _read_cell)
-    stress = parser.parse(lines, '<-- S', _read_stress)
-    symbols, positions = parser.parse(lines, '<-- R', _read_positions)
-    forces = parser.parse(lines, '<-- F', _read_forces)
-
-    atoms = Atoms(symbols, positions, cell=cell, pbc=True)
-    # The energy in .geom or .md file is the force-consistent one
-    # (possibly with the the finite-basis-set correction when, e.g.,
-    # finite_basis_corr!=0 in GeometryOptimisation).
-    # It should therefore be reasonable to assign it to `free_energy`.
-    # Be also aware that the energy in .geom file not 0K extrapolated.
-    atoms.calc = SinglePointCalculator(
-        atoms=atoms,
-        free_energy=energy,
-        forces=forces,
-        stress=stress,
-    )
-    return atoms
 
 
 @reader
@@ -157,15 +133,12 @@ def iread_castep_md(fd: TextIO, units: Optional[Dict[str, float]] = None):
         if line.strip():
             lines.append(line)
         else:
-            yield _read_atoms_md(lines, parser)
+            yield _read_atoms(lines, parser)
             lines = []
 
 
-def _read_atoms_md(lines: List[str], parser: Parser):
+def _read_atoms(lines: List[str], parser: Parser):
     from ase.calculators.singlepoint import SinglePointCalculator
-
-    factor = parser.units['a0'] * sqrt(parser.units['me'] / parser.units['Eh'])
-    time = float(lines[0].split()[0]) * factor  # au -> ASE
 
     energy = parser.parse(lines, '<-- E', _read_energies)
     # temperature = parser.parse(lines, '<-- T', _read_temperature)
@@ -181,14 +154,25 @@ def _read_atoms_md(lines: List[str], parser: Parser):
     forces = parser.parse(lines, '<-- F', _read_forces)
 
     atoms = Atoms(symbols, positions, cell=cell, pbc=True)
-    atoms.info['time'] = time
-    atoms.set_velocities(velocities)
+
+    if velocities is not None:  # MolecularDynamics
+        units = parser.units
+        factor = units['a0'] * sqrt(units['me'] / units['Eh'])
+        atoms.info['time'] = float(lines[0].split()[0]) * factor  # au -> ASE
+        atoms.set_velocities(velocities)
+
+    # The energy in .geom or .md file is the force-consistent one
+    # (possibly with the the finite-basis-set correction when, e.g.,
+    # finite_basis_corr!=0 in GeometryOptimisation).
+    # It should therefore be reasonable to assign it to `free_energy`.
+    # Be also aware that the energy in .geom file not 0K extrapolated.
     atoms.calc = SinglePointCalculator(
         atoms=atoms,
         free_energy=energy,
         forces=forces,
         stress=stress,
     )
+
     return atoms
 
 
