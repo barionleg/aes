@@ -69,19 +69,6 @@ def read_castep_geom(
     return list(iread_castep_geom(fd, units))[index]
 
 
-def iread_castep_geom(fd: TextIO, units: Optional[Dict[str, float]] = None):
-    """Read a .geom file of CASTEP GeometryOptimization as a generator"""
-    parser = Parser(units)
-    _read_header(fd)
-    lines = []
-    for line in fd:
-        if line.strip():
-            lines.append(line)
-        else:
-            yield _read_atoms(lines, parser)
-            lines = []
-
-
 @reader
 def read_castep_md(
     fd: TextIO,
@@ -124,8 +111,8 @@ def read_castep_md(
     return list(iread_castep_md(fd, units))[index]
 
 
-def iread_castep_md(fd: TextIO, units: Optional[Dict[str, float]] = None):
-    """Read a .md file of CASTEP MolecularDynamics as a generator"""
+def _iread_images(fd: TextIO, units: Optional[Dict[str, float]] = None):
+    """Read a .geom or .md file of CASTEP MolecularDynamics as a generator."""
     parser = Parser(units)
     _read_header(fd)
     lines = []
@@ -135,6 +122,10 @@ def iread_castep_md(fd: TextIO, units: Optional[Dict[str, float]] = None):
         else:
             yield _read_atoms(lines, parser)
             lines = []
+
+
+iread_castep_geom = _iread_images
+iread_castep_md = _iread_images
 
 
 def _read_atoms(lines: List[str], parser: Parser):
