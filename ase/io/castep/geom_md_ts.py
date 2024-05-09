@@ -5,6 +5,7 @@ from typing import Callable, Dict, List, Optional, Sequence, TextIO, Union
 import numpy as np
 from ase import Atoms
 from ase.io.formats import string2index
+from ase.stress import full_3x3_to_voigt_6_stress, voigt_6_to_full_3x3_stress
 from ase.utils import reader, writer
 
 
@@ -190,7 +191,7 @@ def _read_stress(lines: List[str], units: Dict[str, float]) -> np.ndarray:
     hartree = units['Eh']
     bohr = units['a0']
     stress = np.array([line.split()[0:3] for line in lines], dtype=float)
-    return stress.reshape(-1)[[0, 4, 8, 5, 2, 1]] * (hartree / bohr**3)
+    return full_3x3_to_voigt_6_stress(stress) * (hartree / bohr**3)
 
 
 def _read_positions(lines: List[str], units: Dict[str, float]) -> np.ndarray:
@@ -374,7 +375,10 @@ def _write_energies_md(fd: TextIO, atoms: Atoms, units: Dict[str, float]):
     energy = atoms.calc.results.get('free_energy') / hartree
     enthalpy = energy
     if atoms.calc is not None and atoms.calc.results.get('stress') is not None:
-        pressure = np.mean(atoms.calc.results.get('stress')[[0, 1, 2]])
+        stress = atoms.calc.results.get('stress')
+        if stress.shape == (3, 3):
+            stress = full_3x3_to_voigt_6_stress(stress)
+        pressure = np.mean(stress[[0, 1, 2]])
         volume = atoms.get_volume()
         enthalpy += pressure * volume / hartree
     kinetic = atoms.get_kinetic_energy() / hartree
@@ -416,7 +420,8 @@ def _write_stress(fd: TextIO, atoms: Atoms, units: Dict[str, float]):
     if atoms.calc.results.get('stress') is None:
         return
     stress = atoms.calc.results.get('stress') / (hartree / bohr**3)  # Voigt
-    stress = stress[[0, 5, 4, 5, 1, 3, 4, 3, 2]].reshape(3, 3)  # matrix
+    if stress.shape != (3, 3):
+        stress = voigt_6_to_full_3x3_stress(stress)  # matrix
     for i in range(3):
         fd.write(18 * ' ')
         for j in range(3):
