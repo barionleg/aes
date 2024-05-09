@@ -19,9 +19,9 @@ class Parser:
 
     def parse(self, lines: List[str], key: str, method: Callable):
         """Parse <-- `key` in `lines` using `method`"""
-        tmp = [_ for _ in lines if _.strip().endswith(key)]
-        if len(tmp):
-            return method(tmp, self.units)
+        relevant_lines = [line for line in lines if line.strip().endswith(key)]
+        if relevant_lines:
+            return method(relevant_lines, self.units)
         return None
 
 
@@ -93,21 +93,21 @@ iread_castep_geom = _iread_images
 iread_castep_md = _iread_images
 
 
-def _read_atoms(lines: List[str], parser: Parser):
+def _read_atoms(lines: List[str], parser: Parser) -> Atoms:
     from ase.calculators.singlepoint import SinglePointCalculator
 
     energy = parser.parse(lines, '<-- E', _read_energies)
-    # temperature = parser.parse(lines, '<-- T', _read_temperature)
-    # only printed in case of variable cell calculation or calculate_stress
-    # pressure = parser.parse(lines, '<-- P', _read_pressure)
     cell = parser.parse(lines, '<-- h', _read_cell)
-    # only printed in case of variable cell calculation
-    # cell_velocities = parser.extract(lines, '<-- hv', _read_cell_velocities)
-    # only printed in case of variable cell calculation
     stress = parser.parse(lines, '<-- S', _read_stress)
     symbols, positions = parser.parse(lines, '<-- R', _read_positions)
     velocities = parser.parse(lines, '<-- V', _read_velocities)
     forces = parser.parse(lines, '<-- F', _read_forces)
+
+    # Currently unused tags:
+    #
+    # temperature = parser.parse(lines, '<-- T', _read_temperature)
+    # pressure = parser.parse(lines, '<-- P', _read_pressure)
+    # cell_velocities = parser.extract(lines, '<-- hv', _read_cell_velocities)
 
     atoms = Atoms(symbols, positions, cell=cell, pbc=True)
 
@@ -139,7 +139,7 @@ def _read_header(fd: TextIO):
             break
 
 
-def _read_energies(lines: List[str], units: Dict[str, float]):
+def _read_energies(lines: List[str], units: Dict[str, float]) -> float:
     """Read force-consistent energy
 
     Notes
@@ -151,7 +151,7 @@ def _read_energies(lines: List[str], units: Dict[str, float]):
     return float(lines[0].split()[0]) * units['Eh']
 
 
-def _read_temperature(lines: List[str], units: Dict[str, float]):
+def _read_temperature(lines: List[str], units: Dict[str, float]) -> float:
     """Read temperature
 
     Notes
@@ -162,7 +162,7 @@ def _read_temperature(lines: List[str], units: Dict[str, float]):
     return float(lines[0].split()[0]) * factor
 
 
-def _read_pressure(lines: List[str], units: Dict[str, float]):
+def _read_pressure(lines: List[str], units: Dict[str, float]) -> float:
     """Read pressure
 
     Notes
@@ -173,9 +173,9 @@ def _read_pressure(lines: List[str], units: Dict[str, float]):
     return float(lines[0].split()[0]) * factor
 
 
-def _read_cell(lines: List[str], units: Dict[str, float]):
+def _read_cell(lines: List[str], units: Dict[str, float]) -> np.ndarray:
     bohr = units['a0']
-    cell = np.array([_.split()[0:3] for _ in lines], dtype=float)
+    cell = np.array([line.split()[0:3] for line in lines], dtype=float)
     return cell * bohr
 
 
@@ -186,31 +186,31 @@ def _read_cell(lines: List[str], units: Dict[str, float]):
 #     return cell_velocities * np.sqrt(hartree / me)
 
 
-def _read_stress(lines: List[str], units: Dict[str, float]):
+def _read_stress(lines: List[str], units: Dict[str, float]) -> np.ndarray:
     hartree = units['Eh']
     bohr = units['a0']
-    stress = np.array([_.split()[0:3] for _ in lines], dtype=float)
+    stress = np.array([line.split()[0:3] for line in lines], dtype=float)
     return stress.reshape(-1)[[0, 4, 8, 5, 2, 1]] * (hartree / bohr**3)
 
 
-def _read_positions(lines: List[str], units: Dict[str, float]):
+def _read_positions(lines: List[str], units: Dict[str, float]) -> np.ndarray:
     bohr = units['a0']
-    symbols = [_.split()[0] for _ in lines]
-    positions = np.array([_.split()[2:5] for _ in lines], dtype=float)
+    symbols = [line.split()[0] for line in lines]
+    positions = np.array([line.split()[2:5] for line in lines], dtype=float)
     return symbols, positions * bohr
 
 
-def _read_velocities(lines: List[str], units: Dict[str, float]):
+def _read_velocities(lines: List[str], units: Dict[str, float]) -> np.ndarray:
     hartree = units['Eh']
     me = units['me']
-    velocities = np.array([_.split()[2:5] for _ in lines], dtype=float)
+    velocities = np.array([line.split()[2:5] for line in lines], dtype=float)
     return velocities * np.sqrt(hartree / me)
 
 
-def _read_forces(lines: List[str], units: Dict[str, float]):
+def _read_forces(lines: List[str], units: Dict[str, float]) -> np.ndarray:
     hartree = units['Eh']
     bohr = units['a0']
-    forces = np.array([_.split()[2:5] for _ in lines], dtype=float)
+    forces = np.array([line.split()[2:5] for line in lines], dtype=float)
     return forces * (hartree / bohr)
 
 
