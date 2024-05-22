@@ -356,6 +356,10 @@ def _write_time(fd: TextIO, index: int):
 
 
 def _write_energies_geom(fd: TextIO, atoms: Atoms, units: Dict[str, float]):
+    """Write energies (in hartree) in a CASTEP .geom file.
+
+    The energy and the enthalpy are printed.
+    """
     hartree = units['Eh']
     if atoms.calc is None:
         return
@@ -370,24 +374,29 @@ def _write_energies_geom(fd: TextIO, atoms: Atoms, units: Dict[str, float]):
 
 
 def _write_energies_md(fd: TextIO, atoms: Atoms, units: Dict[str, float]):
+    """Write energies (in hartree) in a CASTEP .md file.
+
+    The potential energy, the total energy or enthalpy, and the kinetic energy
+    are printed.
+
+    Notes
+    -----
+    For the second item, CASTEP prints the total energy for the NVE and the NVT
+    ensembles and the total enthalpy for the NPH and NPT ensembles.
+    For the Nosé–Hoover (chain) thermostat, furthermore, the kinetic energies
+    of the thermostats are also added.
+
+    """
     hartree = units['Eh']
     if atoms.calc is None:
         return
     if atoms.calc.results.get('free_energy') is None:
         return
-    energy = atoms.calc.results.get('free_energy') / hartree
-    enthalpy = energy
-    if atoms.calc is not None and atoms.calc.results.get('stress') is not None:
-        stress = atoms.calc.results.get('stress')
-        if stress.shape == (3, 3):
-            stress = full_3x3_to_voigt_6_stress(stress)
-        pressure = np.mean(stress[[0, 1, 2]])
-        volume = atoms.get_volume()
-        enthalpy += pressure * volume / hartree
+    potential = atoms.calc.results.get('free_energy') / hartree
     kinetic = atoms.get_kinetic_energy() / hartree
     fd.write(18 * ' ')
-    fd.write(f'   {_format_float(energy)}')
-    fd.write(f'   {_format_float(enthalpy)}')
+    fd.write(f'   {_format_float(potential)}')
+    fd.write(f'   {_format_float(potential + kinetic)}')
     fd.write(f'   {_format_float(kinetic)}')
     fd.write('  <-- E\n')
 
