@@ -51,6 +51,7 @@ def _read_images(
         - ``Eh``: Hartree energy in eV
         - ``a0``: Bohr radius in Å
         - ``me``: electron mass in Da
+        - ``kB``: Boltzmann constant in eV/K
 
         If None, values based on CODATA2002 are used.
 
@@ -236,6 +237,7 @@ def write_castep_geom(
         - ``Eh``: Hartree energy in eV
         - ``a0``: Bohr radius in Å
         - ``me``: electron mass in Da
+        - ``kB``: Boltzmann constant in eV/K
 
         If None, values based on CODATA2002 are used.
     sort : bool, default: False
@@ -287,6 +289,7 @@ def write_castep_md(
         - ``Eh``: Hartree energy in eV
         - ``a0``: Bohr radius in Å
         - ``me``: electron mass in Da
+        - ``kB``: Boltzmann constant in eV/K
 
         If None, values based on CODATA2002 are used.
     sort : bool, default: False
@@ -390,10 +393,20 @@ def _write_energies_md(fd: TextIO, atoms: Atoms, units: Dict[str, float]):
 
 
 def _write_temperature(fd: TextIO, atoms: Atoms, units: Dict[str, float]):
-    hartree = units['Eh']
-    kinetic = atoms.get_kinetic_energy() / hartree
+    """Write temperature (in hartree) in a CASTEP .md file.
+
+    CASTEP writes the temperature in a .md file with 3`N` degrees of freedom
+    regardless of the given constraints including the fixed center of mass
+    (``FIX_COM`` which is by default ``TRUE`` in many cases).
+    To get the consistent result with the above behavior of CASTEP using
+    this method, we must set the corresponding constraints (e.g. ``FixCom``)
+    to the ``Atoms`` object beforehand.
+    """
+    hartree = units['Eh']  # eV
+    boltzmann = units['kB']  # eV/K
+    temperature = atoms.get_temperature() * boltzmann / hartree
     fd.write(18 * ' ')
-    fd.write(f'   {_format_float(kinetic)}')
+    fd.write(f'   {_format_float(temperature)}')
     fd.write(54 * ' ')
     fd.write('  <-- T\n')
 
