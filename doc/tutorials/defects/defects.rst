@@ -194,17 +194,17 @@ simple cubic one can generate series of shapes that are usable for
 supercell build using a primitive FCC cell are directly applicable to
 diamond and zincblende lattices.
 
-For convenience the `\mathbf{P}_\text{opt}` matrices for the
-aforementioned lattices have already been generated for
-`N_{uc}\leq2000` and are provided here as dictionaries in `json
-<https://en.wikipedia.org/wiki/JSON>`_ format.
+For convenience the `\mathbf{P}_\text{opt}` matrices for some common
+space groups (simple cubic, face-centered cubic and body-centered cubic)
+have already been generated for `N_{uc}\leq2000` and are provided here as
+dictionaries in `json <https://en.wikipedia.org/wiki/JSON>`_ format.
 
- * Transformation of face-centered cubic metric to simple cubic-like shapes: :download:`Popt-fcc2sc.json`
- * Transformation of face-centered cubic metric to face-centered cubic-like shapes: :download:`Popt-fcc2fcc.json`
- * Transformation of body-centered cubic metric to simple cubic-like shapes: :download:`Popt-bcc2sc.json`
- * Transformation of body-centered cubic metric to face-centered cubic-like shapes: :download:`Popt-bcc2fcc.json`
- * Transformation of simple cubic metric to simple cubic-like shapes: :download:`Popt-sc2sc.json`
- * Transformation of simple cubic metric to face-centered cubic-like shapes: :download:`Popt-sc2fcc.json`
+ * Transformation of face-centered cubic metric to simple cubic-like shapes: :download:`fcc2sc.json`
+ * Transformation of face-centered cubic metric to face-centered cubic-like shapes: :download:`fcc2fcc.json`
+ * Transformation of body-centered cubic metric to simple cubic-like shapes: :download:`bcc2sc.json`
+ * Transformation of body-centered cubic metric to face-centered cubic-like shapes: :download:`bcc2fcc.json`
+ * Transformation of simple cubic metric to simple cubic-like shapes: :download:`sc2sc.json`
+ * Transformation of simple cubic metric to face-centered cubic-like shapes: :download:`sc2fcc.json`
 
 The thus obtained `\bar{\Delta}` values are shown as a function
 of the number of unit cells `N_{uc}` in the panel below, which
@@ -229,6 +229,17 @@ shapes is more challenging as illustrated for a hexagonal material
 .. image:: score-size-bcc2fcc.svg
    :width: 30%
 
+
+.. note::
+    For unit cells with more complex space groups, this approach can be cumbersome due
+    to the implementation which loops over many possible transformation matrices. The
+    `find_optimal_cell_shape <https://doped.readthedocs.io/en/latest/doped.utils.html#doped.utils.supercells.find_optimal_cell_shape>`_
+    function in `doped <https://doped.readthedocs.io>`_ has implemented the same algorithm
+    with a number of efficiency improvements, giving ~100x speedup in compute time, as well
+    as an efficient `algorithm <https://doped.readthedocs.io/en/latest/doped.utils.html#doped.utils.supercells.find_ideal_supercell>`_
+    for *directly* optimising the periodic defect-defect distance for a given supercell size
+    (typically the primary goal, can give ~10-50% improvement); see [Kavanagh]_ or the
+    ``doped`` `tutorials <https://doped.readthedocs.io/en/latest/generation_tutorial.html>`_.
    
 Generation of supercell
 -----------------------
@@ -252,3 +263,8 @@ follows::
    First-principles study of codoping in lanthanum bromide,
    Phys. Rev. B, Vol **91**, 165206 (2012),
    :doi:`10.1103/PhysRevB.91.165206`; Appendix C
+
+.. [Kavanagh] S. R. Kavanagh et al.
+   doped: Python toolkit for robust and repeatable charged defect supercell calculations
+   J. Open Source Softw, 9(**96**), 6433 (2024),
+   :doi:`10.21105/joss.06433`
