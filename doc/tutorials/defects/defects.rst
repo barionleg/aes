@@ -234,12 +234,11 @@ shapes is more challenging as illustrated for a hexagonal material
     For unit cells with more complex space groups, this approach can be cumbersome due
     to the implementation which loops over many possible transformation matrices. The
     `find_optimal_cell_shape <https://doped.readthedocs.io/en/latest/doped.utils.html#doped.utils.supercells.find_optimal_cell_shape>`_
-    function in `doped <https://doped.readthedocs.io>`_ has implemented the same algorithm
-    with a number of efficiency improvements, giving ~100x speedup in compute time, as well
-    as an efficient `algorithm <https://doped.readthedocs.io/en/latest/doped.utils.html#doped.utils.supercells.find_ideal_supercell>`_
-    for *directly* optimising the periodic defect-defect distance for a given supercell size
-    (typically the primary goal, can give ~10-50% improvement); see [Kavanagh]_ or the
-    ``doped`` `tutorials <https://doped.readthedocs.io/en/latest/generation_tutorial.html>`_.
+    function in `doped <https://doped.readthedocs.io>`_ implements the same algorithm with
+    some efficiency improvements (~100x compute time speedup), and offers an efficient
+    `algorithm <https://doped.readthedocs.io/en/latest/doped.utils.html#doped.utils.supercells.find_ideal_supercell>`_
+    for *directly* optimising the periodic defect-defect distance (~10-50% improvements);
+    see [Kavanagh]_ or the ``doped`` `tutorials <https://doped.readthedocs.io/en/latest/generation_tutorial.html>`_.
    
 Generation of supercell
 -----------------------
