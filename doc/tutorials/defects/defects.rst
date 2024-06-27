@@ -199,12 +199,12 @@ space groups (simple cubic, face-centered cubic and body-centered cubic)
 have already been generated for `N_{uc}\leq2000` and are provided here as
 dictionaries in `json <https://en.wikipedia.org/wiki/JSON>`_ format.
 
- * Transformation of face-centered cubic metric to simple cubic-like shapes: :download:`fcc2sc.json`
- * Transformation of face-centered cubic metric to face-centered cubic-like shapes: :download:`fcc2fcc.json`
- * Transformation of body-centered cubic metric to simple cubic-like shapes: :download:`bcc2sc.json`
- * Transformation of body-centered cubic metric to face-centered cubic-like shapes: :download:`bcc2fcc.json`
- * Transformation of simple cubic metric to simple cubic-like shapes: :download:`sc2sc.json`
- * Transformation of simple cubic metric to face-centered cubic-like shapes: :download:`sc2fcc.json`
+ * Transformation of face-centered cubic metric to simple cubic-like shapes: :download:`Popt-fcc2sc.json`
+ * Transformation of face-centered cubic metric to face-centered cubic-like shapes: :download:`Popt-fcc2fcc.json`
+ * Transformation of body-centered cubic metric to simple cubic-like shapes: :download:`Popt-bcc2sc.json`
+ * Transformation of body-centered cubic metric to face-centered cubic-like shapes: :download:`Popt-bcc2fcc.json`
+ * Transformation of simple cubic metric to simple cubic-like shapes: :download:`Popt-sc2sc.json`
+ * Transformation of simple cubic metric to face-centered cubic-like shapes: :download:`Popt-sc2fcc.json`
 
 The thus obtained `\bar{\Delta}` values are shown as a function
 of the number of unit cells `N_{uc}` in the panel below, which

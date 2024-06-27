@@ -6,8 +6,8 @@ import os
 
 import matplotlib.pyplot as plt
 
-for fname in glob.glob('*2*.json'):
-    tag = os.path.basename(fname).replace('.json', '')
+for fname in glob.glob('Popt*2*.json'):
+    tag = os.path.basename(fname).replace('Popt-', '').replace('.json', '')
 
     with open(fname) as data_file:
         data = json.load(data_file)
