@@ -403,6 +403,7 @@ def read_vasp_xml(filename='vasprun.xml', index=-1):
     ibz_kpts = None
     kpt_weights = None
     parameters = OrderedDict()
+    has_stress = False
 
     try:
         for event, elem in tree:
@@ -483,6 +484,12 @@ def read_vasp_xml(filename='vasprun.xml', index=-1):
                         dipole = np.array(
                             [float(val) for val in dblock.text.split()])
 
+                elif elem.tag == 'incar':
+                    stress_ele = elem.find('i[@name="PSTRESS"]')
+                    if stress_ele is not None:
+                        has_stress = True
+                        pstress = float(stress_ele.text)
+
             elif event == 'start' and elem.tag == 'calculation':
                 calculation.append(elem)
 
@@ -503,6 +510,11 @@ def read_vasp_xml(filename='vasprun.xml', index=-1):
         steps = []
 
     for step in steps:
+        cell = np.zeros((3, 3), dtype=float)
+        for i, vector in enumerate(
+                step.find('structure/crystal/varray[@name="basis"]')):
+            cell[i] = np.array([float(val) for val in vector.text.split()])
+
         # Workaround for VASP bug, e_0_energy contains the wrong value
         # in calculation/energy, but calculation/scstep/energy does not
         # include classical VDW corrections. So, first calculate
@@ -514,17 +526,16 @@ def read_vasp_xml(filename='vasprun.xml', index=-1):
             lastdipole = dipoles[-1]
         else:
             lastdipole = None
-
+                                                                                       
         de = (float(lastscf.find('i[@name="e_0_energy"]').text) -
               float(lastscf.find('i[@name="e_fr_energy"]').text))
-
-        free_energy = float(step.find('energy/i[@name="e_fr_energy"]').text)
+        if has_stress:
+            volume = np.linalg.det(cell)
+            PV = pstress / 10 * volume / 1.60217733E2  # this is GPa in vasp
+        else:
+            PV = 0.
+        free_energy = float(step.find('energy/i[@name="e_fr_energy"]').text) - PV
         energy = free_energy + de
-
-        cell = np.zeros((3, 3), dtype=float)
-        for i, vector in enumerate(
-                step.find('structure/crystal/varray[@name="basis"]')):
-            cell[i] = np.array([float(val) for val in vector.text.split()])
 
         scpos = np.zeros((natoms, 3), dtype=float)
         for i, vector in enumerate(
