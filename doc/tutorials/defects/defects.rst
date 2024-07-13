@@ -65,8 +65,8 @@ hexagonal or square lattices have thus clear advantages. This argument
 can be extended to 3D: Square lattices in 2D correspond to cubic
 lattices (supercells) in 3D with `r_1=a_0` and
 `Z_1=6`. The 3D analogue of the hexagonal 2D lattice are
-hexagonal and cubic close packed structures (e.g FCC, HCP), both of which
-yield `r_1 = a_0/^6\sqrt{2} = 1.1225 a_0` and `Z_1=12`.
+hexagonal and cubic close packed structures (i.e. FCC, HCP), both of which
+yield `r_1 = a_0/\sqrt[6]{2} \approx 1.1225 a_0` and `Z_1=12`.
 
 It is straightforward to construct cubic or face-centered cubic (fcc,
 cubic closed packed) supercells for cubic materials (including e.g,
@@ -195,7 +195,7 @@ supercell build using a primitive FCC cell are directly applicable to
 diamond and zincblende lattices.
 
 For convenience the `\mathbf{P}_\text{opt}` matrices for some common
-space groups (simple cubic, face-centered cubic and body-centered cubic)
+crystal structures (simple cubic, face-centered cubic and body-centered cubic)
 have already been generated for `N_{uc}\leq2000` and are provided here as
 dictionaries in `json <https://en.wikipedia.org/wiki/JSON>`_ format.
 
