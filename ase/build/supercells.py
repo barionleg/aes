@@ -9,7 +9,8 @@ class SupercellError(Exception):
 
 
 def get_deviation_from_optimal_cell_shape(cell, target_shape="sc", norm=None):
-    r"""
+    r"""Calculate the deviation from the target cell shape.
+
     Calculates the deviation of the given cell metric from the ideal
     cell metric defining a certain shape. Specifically, the function
     evaluates the expression `\Delta = || Q \mathbf{h} -
@@ -38,18 +39,20 @@ def get_deviation_from_optimal_cell_shape(cell, target_shape="sc", norm=None):
     Returns:
         float: Cell metric (0 is perfect score)
     """
-    cell_lengths = np.linalg.norm(cell, axis=0)
+    cell_lengths = np.linalg.norm(cell, axis=1)
+    eff_cubic_length = float(abs(np.linalg.det(cell)) ** (1 / 3))  # 'a_0'
+    
+    if target_shape== 'sc' and norm is None:
+        norm = 1 / eff_cubic_length
 
-    if target_shape in ["sc", "simple-cubic"] and norm is None:
-        eff_cubic_length = float(abs(np.linalg.det(cell)) ** (1 / 3))  # 'a_0' in docs
-        norm = 1/eff_cubic_length
-
-    elif target_shape in ["fcc", "face-centered cubic"] and norm is None:
-        # FCC is characterised by 60 degree angles & lattice vectors = 2**(1/6) times the eff cubic length
+    elif target_shape == 'fcc' and norm is None:
+        # FCC is characterised by 60 degree angles & lattice vectors = 2**(1/6)
+        # times the eff cubic length:
         eff_fcc_length = eff_cubic_length * 2 ** (1 / 6)
-        norm = 1/eff_fcc_length
+        norm = 1 / eff_fcc_length
 
-    return np.sqrt(np.sum(((cell_lengths * norm) - 1) ** 2))  # rms difference to eff cubic/FCC length
+    # rms difference to eff cubic/FCC length:
+    return np.sqrt(np.sum(((cell_lengths * norm) - 1) ** 2))
 
 
 def find_optimal_cell_shape(
@@ -60,7 +63,9 @@ def find_optimal_cell_shape(
     upper_limit=2,
     verbose=False,
 ):
-    """
+    """Obtain the optimal transformation matrix for a supercell of target size
+    and shape.
+
     Returns the transformation matrix that produces a supercell
     corresponding to *target_size* unit cells with metric *cell* that
     most closely approximates the shape defined by *target_shape*.
@@ -71,27 +76,30 @@ def find_optimal_cell_shape(
     performance.
 
     Parameters:
-        cell: 2D array of floats
-            Metric given as a (3x3 matrix) of the input structure.
-        target_size: integer
-            Size of desired super cell in number of unit cells.
-        target_shape: str
-            Desired supercell shape. Can be 'sc' for simple cubic or
-            'fcc' for face-centered cubic.
-        lower_limit: int
-            Lower limit of search range.
-        upper_limit: int
-            Upper limit of search range.
-        verbose: bool
-            Set to True to obtain additional information regarding
-            construction of transformation matrix.
+    cell: 2D array of floats
+        Metric given as a (3x3 matrix) of the input structure.
+    target_size: integer
+        Size of desired supercell in number of unit cells.
+    target_shape: str
+        Desired supercell shape. Can be 'sc' for simple cubic or
+        'fcc' for face-centered cubic.
+    lower_limit: int
+        Lower limit of search range.
+    upper_limit: int
+        Upper limit of search range.
+    verbose: bool
+        Set to True to obtain additional information regarding
+        construction of transformation matrix.
 
+    Returns:
+        2D array of integers: Transformation matrix that produces the
+        optimal supercell.
     """
 
     # Set up target metric
-    if target_shape in ["sc", "simple-cubic"]:
+    if target_shape== 'sc':
         target_metric = np.eye(3)
-    elif target_shape in ["fcc", "face-centered cubic"]:
+    elif target_shape == 'fcc':
         target_metric = 0.5 * np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]],
                                        dtype=float)
     if verbose:
@@ -99,7 +107,8 @@ def find_optimal_cell_shape(
         print(target_metric)
 
     # Normalize cell metric to reduce computation time during looping
-    norm = (target_size * abs(np.linalg.det(cell)) / np.linalg.det(target_metric)) ** (-1.0 / 3)
+    norm = (target_size * abs(np.linalg.det(cell)) /
+            np.linalg.det(target_metric)) ** (-1.0 / 3)
     norm_cell = norm * cell
     if verbose:
         print("normalization factor (Q): %g" % norm)
@@ -135,7 +144,8 @@ def find_optimal_cell_shape(
         return None
 
     if np.all(optimal_P <= 0) or np.linalg.det(optimal_P) <= 0:
-        optimal_P *= -1  # flip signs if all negative or negative determinant (equivalent supercell)
+        optimal_P *= -1  # flip signs if all negative or negative determinant
+        # (equivalent supercell)
 
     # Finalize.
     if verbose:
