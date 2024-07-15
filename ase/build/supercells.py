@@ -143,9 +143,8 @@ def find_optimal_cell_shape(
         print("Failed to find a transformation matrix.")
         return None
 
-    if np.all(optimal_P <= 0) or np.linalg.det(optimal_P) <= 0:
-        optimal_P *= -1  # flip signs if all negative or negative determinant
-        # (equivalent supercell)
+    if np.linalg.det(optimal_P) <= 0:
+        optimal_P *= -1  # flip signs if negative determinant
 
     # Finalize.
     if verbose:
