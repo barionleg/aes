@@ -66,7 +66,7 @@ can be extended to 3D: Square lattices in 2D correspond to cubic
 lattices (supercells) in 3D with `r_1=a_0` and
 `Z_1=6`. The 3D analogue of the hexagonal 2D lattice are
 hexagonal and cubic close packed structures (i.e. FCC, HCP), both of which
-yield `r_1 = a_0/\sqrt[6]{2} \approx 1.1225 a_0` and `Z_1=12`.
+yield `r_1 = \sqrt[6]{2} a_0 \approx 1.1225 a_0` and `Z_1=12`.
 
 It is straightforward to construct cubic or face-centered cubic (fcc,
 cubic closed packed) supercells for cubic materials (including e.g,
