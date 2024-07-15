@@ -76,6 +76,7 @@ def find_optimal_cell_shape(
     performance.
 
     Parameters:
+
     cell: 2D array of floats
         Metric given as a (3x3 matrix) of the input structure.
     target_size: integer
