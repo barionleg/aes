@@ -106,7 +106,9 @@ def test_get_deviation_from_optimal_cell_shape():
     # test perfect scores for SC, where cell vector permutation or magnitude
     # do not matter:
     cell = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-    for perm, factor in zip(itertools.combinations(range(3), 3), range(1, 9)):
+    for perm, factor in itertools.product(
+        itertools.permutations(range(3)), range(1, 9)
+    ):
         permuted_cell = [cell[i] * factor for i in perm]
         assert np.isclose(
             get_deviation_from_optimal_cell_shape(permuted_cell, target_shape="sc"), 0.0
@@ -114,7 +116,8 @@ def test_get_deviation_from_optimal_cell_shape():
 
     # likewise for FCC:
     cell = np.array([[1, 1, 0], [0, 1, 1], [1, 0, 1]])
-    for perm, factor in zip(itertools.combinations(range(3), 3), range(1, 9)):
+    for perm, factor in itertools.product(itertools.permutations(range(3)),
+                                          range(1, 9)):
         permuted_cell = [cell[i] * factor for i in perm]
         assert np.isclose(
             get_deviation_from_optimal_cell_shape(permuted_cell, target_shape="fcc"),
@@ -145,7 +148,7 @@ def test_find_optimal_cell_shape():
     )
     assert np.allclose(np.linalg.norm(np.dot(result, cell), axis=1), 4)
 
-    # docs example:
+    # docs examples:
     conf = bulk("Au")  # fcc
     P1 = find_optimal_cell_shape(conf.cell, 32, "sc")
     assert np.allclose(P1, np.array([[-2, 2, 2], [2, -2, 2], [2, 2, -2]]))
