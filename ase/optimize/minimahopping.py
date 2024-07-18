@@ -15,6 +15,59 @@ class MinimaHopping:
     ASE atoms object. Optional parameters are fed through keywords.
     To run multiple searches in parallel, specify the minima_traj keyword,
     and have each run point to the same path.
+
+    Parameters
+    ----------
+    atoms : Atoms object
+        Initial atomic configuration, from which the search begins.
+    T0 : float
+        Initial temperature (K) for the molecular dynamics. Default: 1000.
+    beta1 : float
+        Multiplicative parameter that indicates how the molecular dynamics
+        temperature changes after re-finding the previous minimum.
+        Default: 1.1.
+    beta2 : float
+        Multiplicative parameter that indicates how the molecular dynamics
+        temperature changes after finding a previously found minimum.
+        Default: 1.1.
+    beta3 : float
+        Multiplicative parameter that indicates how the molecular dynamics
+        temperature changes after finding a new minimum.
+        Default: 1 / 1.1.
+    Ediff0 : float
+        Initial energy acceptance threshold (eV). Default: 0.5.
+    alpha1 : float
+        Multiplicative parameter that indicates how the energy acceptance
+        threshold changes after accepting a new minimum. Default: 0.98.
+    alpha2 : float
+        Multiplicative parameter that indicates how the energy acceptance
+        threshold changes after rejecting a new minimum. Default: 1 / 0.98.
+    mdmin : int
+        The molecular dynamics simulation will stop after encountering this
+        many minima (triggering a relaxation). Default: 2.
+    logfile : str
+        Filename to write output. Default: 'hop.log'.
+    minima_threshold : float
+        If all atoms are within this distance (in Angstroms) of those in a
+        configuration in the list of found minima, it is considered the
+        identical configuration.  Default: 0.5.
+    timestep : float
+        Time step (fs) for molecular dynamics simulations. Default: 1.0.
+    optimizer : Optimizer class
+        Local optimizer to use. Default: ase.optimize.QuasiNewton.
+    minima_traj : str
+        Storage file for minima list. If you would like to run many searches in
+        parallel, have them all point to a common minima_traj file. Default:
+        'minimia.traj'.
+    fmax : float
+        Criterion for when to stop the local optimizer (maximum force on
+        any unconstrained atom below this value, in eV/AA). Default: 0.05.
+    opt_kwargs : dict
+        Additional keywords that are fed to the 'run' method of the local
+        optimizer.  Default: {}
+    opt_init_kwargs : dict
+        Additional keywords that are fed to the __init__ method of the local
+        optimizer. Default {}.
     """
 
     _default_settings = {
@@ -31,7 +84,9 @@ class MinimaHopping:
         'timestep': 1.0,  # fs, timestep for MD simulations
         'optimizer': QuasiNewton,  # local optimizer to use
         'minima_traj': 'minima.traj',  # storage file for minima list
-        'fmax': 0.05}  # eV/A, max force for optimizations
+        'fmax': 0.05,  # eV/A, max force for optimizations
+        'opt_kwargs': {},  # additional keywords for opt.run
+        'opt_init_kwargs': {}}  # additional keywords for opt.__init__
 
     def __init__(self, atoms, **kwargs):
         """Initialize with an ASE atoms object and keyword arguments."""
@@ -256,9 +311,10 @@ class MinimaHopping:
         self._atoms.set_momenta(np.zeros(self._atoms.get_momenta().shape))
         with self._optimizer(self._atoms,
                              trajectory='qn%05i.traj' % self._counter,
-                             logfile='qn%05i.log' % self._counter) as opt:
+                             logfile='qn%05i.log' % self._counter,
+                             **self._opt_init_kwargs) as opt:
             self._log('msg', 'Optimization: qn%05i' % self._counter)
-            opt.run(fmax=self._fmax)
+            opt.run(fmax=self._fmax, **self._opt_kwargs)
             self._log('ene')
 
     def _record_minimum(self):

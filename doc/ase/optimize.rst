@@ -487,7 +487,7 @@ This algorithm utilizes a series of alternating steps of NVE molecular dynamics 
    opt = MinimaHopping(atoms=system)
    opt(totalsteps=10)
 
-This will run the algorithm until 10 steps are taken; alternatively, if totalsteps is not specified the algorithm will run indefinitely (or until stopped by a batch system). A number of optional arguments can be fed when initializing the algorithm as keyword pairs. The keywords and default values are:
+This will run the algorithm until 10 steps are taken.  Alternatively, you can specify the ``maxtemp`` keyword to stop the algorithm when the temperature parameter reaches a specified value, corresponding to a state where relatively few new minima are being found. If neither keyword is specified the algorithm will run indefinitely (or until stopped by a batch system). A number of optional arguments can be fed when initializing the algorithm as keyword pairs. The keywords and default values are:
 
 
  | ``T0``: 1000.,  # K, initial MD 'temperature'
@@ -504,6 +504,8 @@ This will run the algorithm until 10 steps are taken; alternatively, if totalste
  | ``optimizer`` : QuasiNewton,  # local optimizer to use
  | ``minima_traj`` : 'minima.traj',  # storage file for minima list
  | ``fmax`` : 0.05,  # eV/A, max force for optimizations
+ | ``opt_kwargs`` : {},  # additional keywords for opt.run
+ | ``opt_init_kwargs``: {}  # additional keywords for opt.__init__
 
 Specific definitions of the ``alpha``, ``beta``, and ``mdmin`` parameters can be found in the publication by Goedecker. ``minima_threshold`` is used to determine if two atomic configurations are identical; if any atom has moved by more than this amount it is considered a new configuration. Note that the code tries to do this in an intelligent manner: atoms are considered to be indistinguishable, and translations are allowed in the directions of the periodic boundary conditions. Therefore, if a CO is adsorbed in an ontop site on a (211) surface it will be considered identical no matter which ontop site it occupies.
 
@@ -511,7 +513,7 @@ The trajectory file ``minima_traj`` will be populated with the accepted minima a
 
 The code is written such that a stopped simulation (e.g., killed by the batching system when the maximum wall time was exceeded) can usually be restarted without too much effort by the user. In most cases, the script can be resubmitted without any modification -- if the ``logfile`` and ``minima_traj`` are found, the script will attempt to use these to resume. (Note that you may need to clean up files left in the directory by the calculator, however.)
 
-Note that these searches can be quite slow, so it can pay to have multiple searches running at a time. Multiple searches can run in parallel and share one list of minima. (Run each script from a separate directory but specify the location to the same absolute location for ``minima_traj``). Each search will use the global information of the list of minima, but will keep its own local information of the initial temperature and `E_\mathrm{diff}`.
+Note that these searches can be quite long, so it can pay to have multiple searches running at a time. Multiple searches can run in parallel and share one list of minima. (Run each script from a separate directory but specify the location to the same absolute location for ``minima_traj``). Each search will use the global information of the list of minima, but will keep its own local information of the initial temperature and `E_\mathrm{diff}`.
 
 For an example of use, see the :ref:`mhtutorial` tutorial.
 
