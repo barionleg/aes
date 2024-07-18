@@ -361,6 +361,7 @@ Other methods
 * :meth:`~Atoms.get_distances`
 * :meth:`~Atoms.get_all_distances`
 * :meth:`~Atoms.get_volume`
+* :meth:`~Atoms.get_mass_density`
 * :meth:`~Atoms.has`
 * :meth:`~Atoms.edit`
 

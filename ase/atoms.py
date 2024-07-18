@@ -1974,6 +1974,11 @@ class Atoms:
                 .format(self.cell.rank))
         return self.cell.volume
 
+    def get_mass_density(self):
+        """Get mass density of the configuration in g/cm^3."""
+        density = self.get_masses().sum() / self.get_volume()
+        return density * units._amu * 1000 / (1e-8)**3
+
     def _get_positions(self):
         """Return reference to positions-array for in-place manipulations."""
         return self.arrays['positions']
