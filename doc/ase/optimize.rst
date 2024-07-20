@@ -12,6 +12,17 @@ optimization algorithms which find a nearby local minimum and
 global optimization algorithms that try to find the global
 minimum (a much harder task).
 
+Most optimization algorithms available in ASE inherit the following
+:class:`~ase.optimize.optimize.Optimizer` base-class.
+
+.. autoclass:: ase.optimize.optimize.Optimizer
+
+.. note::
+
+    :class:`~ase.optimize.optimize.Optimizer` classes themselves optimize only
+    internal atomic positions.
+    Cell volume and shape can also be optimized in combination with ``Filter``
+    classes. (See :doc:`filters` for details.)
 
 Local optimization
 ==================
@@ -46,12 +57,6 @@ The convergence criterion is that the force on all individual atoms
 should be less than *fmax*:
 
 .. math:: \max_a |\vec{F_a}| < f_\text{max}
-
-.. note::
-
-    ``Optimizer`` classes themselves optimize only internal atomic positions.
-    Cell volume and shape can also be optimized in combination with ``Filter``
-    classes. (See :doc:`filters` for details.)
 
 BFGS
 ----

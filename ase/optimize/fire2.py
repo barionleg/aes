@@ -43,17 +43,18 @@ class FIRE2(Optimizer):
         fdec: float = 0.5,
         astart: float = 0.25,
         fa: float = 0.99,
-        master: Optional[bool] = None,
         position_reset_callback: Optional[Callable] = None,
-        force_consistent=Optimizer._deprecated,
-        use_abc: Optional[bool] = False
+        use_abc: Optional[bool] = False,
+        **kwargs,
     ):
-        """Parameters:
+        """
 
-        atoms: Atoms object
+        Parameters
+        ----------
+        atoms: :class:`~ase.Atoms`
             The Atoms object to relax.
 
-        restart: string
+        restart: str
             JSON file used to store hessian matrix. If set, file with
             such a name will be searched and hessian matrix stored will
             be used, if the file exists.
@@ -62,7 +63,7 @@ class FIRE2(Optimizer):
             If *logfile* is a string, a file with that name will be opened.
             Use '-' for stdout.
 
-        trajectory: string
+        trajectory: str
             Trajectory file used to store optimisation path.
 
         dt: float
@@ -98,29 +99,22 @@ class FIRE2(Optimizer):
         fa: float
             Factor to decrease the parameter alpha. Default value is 0.99
 
-        master: boolean
-            Defaults to None, which causes only rank 0 to save files.  If
-            set to true,  this rank will save files.
-
         position_reset_callback: function(atoms, r, e, e_last)
             Function that takes current *atoms* object, an array of position
             *r* that the optimizer will revert to, current energy *e* and
             energy of last step *e_last*. This is only called if e > e_last.
-
-        force_consistent: boolean or None
-            Use force-consistent energy calls (as opposed to the energy
-            extrapolated to 0 K).  If force_consistent=None, uses
-            force-consistent energies if available in the calculator, but
-            falls back to force_consistent=False if not.
 
         use_abc: bool
             If True, the Accelerated Bias-Corrected FIRE algorithm is
             used (ABC-FIRE).
             Default value is False.
 
+        kwargs : dict, optional
+            Extra arguments passed to
+            :class:`~ase.optimize.optimize.Optimizer`.
+
        """
-        Optimizer.__init__(self, atoms, restart, logfile, trajectory,
-                           master, force_consistent=force_consistent)
+        Optimizer.__init__(self, atoms, restart, logfile, trajectory, **kwargs)
 
         self.dt = dt
 

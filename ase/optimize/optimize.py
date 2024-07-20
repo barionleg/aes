@@ -312,16 +312,14 @@ class Optimizer(Dynamics):
         restart: Optional[str] = None,
         logfile: Optional[Union[IO, str]] = None,
         trajectory: Optional[str] = None,
-        master: Optional[bool] = None,
-        comm=world,
         append_trajectory: bool = False,
-        force_consistent=_deprecated,
+        **kwargs,
     ):
-        """Structure optimizer object.
+        """
 
-        Parameters:
-
-        atoms: Atoms object
+        Parameters
+        ----------
+        atoms: :class:`~ase.Atoms`
             The Atoms object to relax.
 
         restart: str
@@ -336,31 +334,20 @@ class Optimizer(Dynamics):
             Trajectory will be constructed. Use *None* for no
             trajectory.
 
-        master: boolean
-            Defaults to None, which causes only rank 0 to save files. If
-            set to true, this rank will save files.
-
-        comm: Communicator object
-            Communicator to handle parallel file reading and writing.
-
-        append_trajectory: boolean
+        append_trajectory: bool
             Appended to the trajectory file instead of overwriting it.
 
-        force_consistent: boolean or None
-            Use force-consistent energy calls (as opposed to the energy
-            extrapolated to 0 K). If force_consistent=None, uses
-            force-consistent energies if available in the calculator, but
-            falls back to force_consistent=False if not.
-        """
-        self.check_deprecated(force_consistent)
+        kwargs : dict, optional
+            Extra arguments passed to :class:`~ase.optimize.optimize.Dynamics`.
 
+        """
         super().__init__(
             atoms=atoms,
             logfile=logfile,
             trajectory=trajectory,
             append_trajectory=append_trajectory,
-            master=master,
-            comm=comm)
+            **kwargs,
+        )
 
         self.restart = restart
 
@@ -371,17 +358,6 @@ class Optimizer(Dynamics):
         else:
             self.read()
             self.comm.barrier()
-
-    @classmethod
-    def check_deprecated(cls, force_consistent):
-        if force_consistent is cls._deprecated:
-            return False
-
-        warnings.warn(
-            'force_consistent keyword is deprecated and will '
-            'be ignored.  This will raise an error in future versions '
-            'of ASE.',
-            FutureWarning)
 
     def read(self):
         raise NotImplementedError

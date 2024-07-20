@@ -27,15 +27,16 @@ class LBFGS(Optimizer):
         damping: float = 1.0,
         alpha: float = 70.0,
         use_line_search: bool = False,
-        master: Optional[bool] = None,
-        force_consistent=Optimizer._deprecated,
+        **kwargs,
     ):
-        """Parameters:
+        """
 
-        atoms: Atoms object
+        Parameters
+        ----------
+        atoms: :class:`~ase.Atoms`
             The Atoms object to relax.
 
-        restart: string
+        restart: str
             JSON file used to store vectors for updating the inverse of
             Hessian matrix. If set, file with such a name will be searched
             and information stored will be used, if the file exists.
@@ -66,13 +67,12 @@ class LBFGS(Optimizer):
             steps to converge might be less if a lower value is used. However,
             a lower value also means risk of instability.
 
-        master: boolean
-            Defaults to None, which causes only rank 0 to save files.  If
-            set to true,  this rank will save files.
+        kwargs : dict, optional
+            Extra arguments passed to
+            :class:`~ase.optimize.optimize.Optimizer`.
 
         """
-        Optimizer.__init__(self, atoms, restart, logfile, trajectory, master,
-                           force_consistent=force_consistent)
+        Optimizer.__init__(self, atoms, restart, logfile, trajectory, **kwargs)
 
         if maxstep is not None:
             self.maxstep = maxstep

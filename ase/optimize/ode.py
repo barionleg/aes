@@ -187,15 +187,13 @@ class ODE12r(SciPyOptimizer):
         trajectory: Optional[str] = None,
         callback_always: bool = False,
         alpha: float = 1.0,
-        master: Optional[bool] = None,
-        force_consistent=SciPyOptimizer._deprecated,
         precon: Optional[str] = None,
         verbose: int = 0,
         rtol: float = 1e-2,
+        **kwargs,
     ):
         SciPyOptimizer.__init__(self, atoms, logfile, trajectory,
-                                callback_always, alpha, master,
-                                force_consistent)
+                                callback_always, alpha, **kwargs)
         self._actual_atoms = atoms
         from ase.optimize.precon.precon import \
             make_precon  # avoid circular dep

@@ -36,15 +36,17 @@ class PreconLBFGS(Optimizer):
     # CO : added parameters rigid_units and rotation_factors
     def __init__(self, atoms, restart=None, logfile='-', trajectory=None,
                  maxstep=None, memory=100, damping=1.0, alpha=70.0,
-                 master=None, precon='auto', variable_cell=False,
+                 precon='auto', variable_cell=False,
                  use_armijo=True, c1=0.23, c2=0.46, a_min=None,
-                 rigid_units=None, rotation_factors=None, Hinv=None):
-        """Parameters:
+                 rigid_units=None, rotation_factors=None, Hinv=None, **kwargs):
+        """
 
-        atoms: Atoms object
+        Parameters
+        ----------
+        atoms: :class:`~ase.Atoms`
             The Atoms object to relax.
 
-        restart: string
+        restart: str
             Pickle file used to store vectors for updating the inverse of
             Hessian matrix. If set, file with such a name will be searched
             and information stored will be used, if the file exists.
@@ -53,7 +55,7 @@ class PreconLBFGS(Optimizer):
             If *logfile* is a string, a file with that name will be opened.
             Use '-' for stdout.
 
-        trajectory: string
+        trajectory: str
             Trajectory file used to store optimisation path.
 
         maxstep: float
@@ -74,10 +76,6 @@ class PreconLBFGS(Optimizer):
             conservative value of 70.0 is the default, but number of needed
             steps to converge might be less if a lower value is used. However,
             a lower value also means risk of instability.
-
-        master: boolean
-            Defaults to None, which causes only rank 0 to save files.  If
-            set to true,  this rank will save files.
 
         precon: ase.optimize.precon.Precon instance or compatible.
             Apply the given preconditioner during optimization. Defaults to
@@ -118,10 +116,15 @@ class PreconLBFGS(Optimizer):
         rotation_factors: list of scalars; acceleration factors deteriming
            the rate of rotation as opposed to the rate of stretch in the
            rigid units
+
+        kwargs : dict, optional
+            Extra arguments passed to
+            :class:`~ase.optimize.optimize.Optimizer`.
+
         """
         if variable_cell:
             atoms = UnitCellFilter(atoms)
-        Optimizer.__init__(self, atoms, restart, logfile, trajectory, master)
+        Optimizer.__init__(self, atoms, restart, logfile, trajectory, **kwargs)
 
         self._actual_atoms = atoms
 

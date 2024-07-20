@@ -5,7 +5,6 @@ import numpy as np
 from numpy.linalg import eigh
 
 from ase import Atoms
-from ase.parallel import world
 from ase.optimize.optimize import Optimizer, UnitCellFilter
 
 
@@ -21,23 +20,22 @@ class BFGS(Optimizer):
         trajectory: Optional[str] = None,
         append_trajectory: bool = False,
         maxstep: Optional[float] = None,
-        master: Optional[bool] = None,
         alpha: Optional[float] = None,
-        comm=world
+        **kwargs,
     ):
         """BFGS optimizer.
 
-        Parameters:
-
-        atoms: Atoms object
+        Parameters
+        ----------
+        atoms: :class:`~ase.Atoms`
             The Atoms object to relax.
 
-        restart: string
+        restart: str
             JSON file used to store hessian matrix. If set, file with
             such a name will be searched and hessian matrix stored will
             be used, if the file exists.
 
-        trajectory: string
+        trajectory: str
             Trajectory file used to store optimisation path.
 
         logfile: file object or str
@@ -48,19 +46,16 @@ class BFGS(Optimizer):
             Used to set the maximum distance an atom can move per
             iteration (default value is 0.2 Å).
 
-        master: boolean
-            Defaults to None, which causes only rank 0 to save files.  If
-            set to true, this rank will save files.
-
-        comm: Communicator object
-            Defaults to world. Communicator to handle parallel file reading
-            and writing, set by ase.parallel.world.
-
         alpha: float
             Initial guess for the Hessian (curvature of energy surface). A
             conservative value of 70.0 is the default, but number of needed
             steps to converge might be less if a lower value is used. However,
             a lower value also means risk of instability.
+
+        kwargs : dict, optional
+            Extra arguments passed to
+            :class:`~ase.optimize.optimize.Optimizer`.
+
         """
         if maxstep is None:
             self.maxstep = self.defaults['maxstep']
@@ -76,8 +71,8 @@ class BFGS(Optimizer):
             self.alpha = self.defaults['alpha']
         Optimizer.__init__(self, atoms=atoms, restart=restart,
                            logfile=logfile, trajectory=trajectory,
-                           master=master, append_trajectory=append_trajectory,
-                           comm=comm)
+                           append_trajectory=append_trajectory,
+                           **kwargs)
 
     def initialize(self):
         # initial hessian

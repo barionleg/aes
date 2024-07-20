@@ -4,7 +4,6 @@ from typing import IO, Optional, Union
 import numpy as np
 
 from ase import Atoms
-from ase.parallel import world
 from ase.geometry import cell_to_cellpar
 from ase.optimize import BFGS
 from ase.optimize.optimize import Dynamics
@@ -64,20 +63,19 @@ class CellAwareBFGS(BFGS):
         trajectory: Optional[str] = None,
         append_trajectory: bool = False,
         maxstep: Optional[float] = None,
-        master: Optional[bool] = None,
         bulk_modulus: Optional[float] = 145 * GPa,
         poisson_ratio: Optional[float] = 0.3,
         alpha: Optional[float] = None,
         long_output: Optional[bool] = False,
-        comm=world,
+        **kwargs,
     ):
         self.bulk_modulus = bulk_modulus
         self.poisson_ratio = poisson_ratio
         self.long_output = long_output
         BFGS.__init__(self, atoms=atoms, restart=restart, logfile=logfile,
-                      trajectory=trajectory, maxstep=maxstep, master=master,
+                      trajectory=trajectory, maxstep=maxstep,
                       alpha=alpha, append_trajectory=append_trajectory,
-                      comm=comm)
+                      **kwargs)
         assert not isinstance(atoms, Atoms)
         if hasattr(atoms, 'exp_cell_factor'):
             assert atoms.exp_cell_factor == 1.0
