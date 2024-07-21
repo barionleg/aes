@@ -730,8 +730,8 @@ def output_column_format(atoms, columns, arrays, write_info=True):
     """
     Helper function to build extended XYZ comment line
     """
-    fmt_map = {'d': ('R', '%16.8f'),
-               'f': ('R', '%16.8f'),
+    fmt_map = {'d': ('R', '%16.16f'),
+               'f': ('R', '%16.16f'),
                'i': ('I', '%8d'),
                'O': ('S', '%s'),
                'S': ('S', '%s'),
