@@ -290,7 +290,7 @@ class GPMin(Optimizer, GaussianProcess):
     def dump(self):
         """Save the training set"""
         if world.rank == 0 and self.restart is not None:
-            with open(self.restart, 'wb') as fd:
+            with open(self.restart, 'w') as fd:
                 write_json(fd, (self.x_list, self.y_list))
 
     def read(self):
