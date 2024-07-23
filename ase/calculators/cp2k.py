@@ -9,6 +9,7 @@ import os.path
 import subprocess
 from contextlib import AbstractContextManager
 from warnings import warn
+from select import select
 
 import numpy as np
 
@@ -191,6 +192,7 @@ class CP2K(Calculator, AbstractContextManager):
         xc='LDA',
         print_level='LOW',
         set_pos_file=False,
+        timeout=None
     )
 
     def __init__(self, restart=None,
@@ -222,7 +224,9 @@ class CP2K(Calculator, AbstractContextManager):
             self.read(restart)
 
         # Start the shell by default, which is how SocketIOCalculator
-        self._shell = Cp2kShell(self.command, self._debug)
+        self._shell = Cp2kShell(self.command,
+                                self._debug,
+                                timeout=self.parameters['timeout'])
 
     def __del__(self):
         """Terminate cp2k_shell child process"""
@@ -304,9 +308,10 @@ class CP2K(Calculator, AbstractContextManager):
 
         if 'positions' in system_changes:
             if self.parameters.set_pos_file:
+                # TODO: (miketynes) uncomment this before merge
                 # TODO: Update version number when released
-                if self._shell.version < 7:
-                    raise ValueError('SET_POS_FILE requires > CP2K 2024.2')
+                # if self._shell.version < 7:
+                #     raise ValueError('SET_POS_FILE requires > CP2K 2024.2')
                 pos: np.ndarray = self.atoms.get_positions()
                 fn = self.label + '.pos'
                 with open(fn, 'w') as fp:
@@ -324,7 +329,7 @@ class CP2K(Calculator, AbstractContextManager):
                 for pos in self.atoms.get_positions():
                     self._shell.send('%.18e %.18e %.18e' % tuple(pos))
                 self._shell.send('*END')
-            max_change = float(self._shell.recv())
+            max_change = float(self._shell.recv(timeout=self.parameters['timeout']))
             assert max_change >= 0  # sanity check
             self._shell.expect('* READY')
 
@@ -341,7 +346,7 @@ class CP2K(Calculator, AbstractContextManager):
         nvals = int(self._shell.recv())
         assert nvals == 3 * n_atoms  # sanity check
         for i in range(n_atoms):
-            line = self._shell.recv()
+            line = self._shell.recv(timeout=self.parameters['timeout'])
             forces[i, :] = [float(x) for x in line.split()]
         self._shell.expect('* END')
         self._shell.expect('* READY')
@@ -519,12 +524,13 @@ class CP2K(Calculator, AbstractContextManager):
 class Cp2kShell:
     """Wrapper for CP2K-shell child-process"""
 
-    def __init__(self, command, debug):
+    def __init__(self, command, debug, timeout):
         """Construct CP2K-shell object"""
 
         self.isready = False
         self.version = 1.0  # assume oldest possible version until verified
         self._debug = debug
+        self.timeout = timeout
 
         # launch cp2k_shell child process
         assert 'cp2k_shell' in command
@@ -584,18 +590,27 @@ class Cp2kShell:
         self.isready = False
         self._child.stdin.write(line + '\n')
 
-    def recv(self):
+    def recv(self, timeout=None):
         """Receive a line from the cp2k_shell"""
         assert self._child.poll() is None  # child process still alive?
-        line = self._child.stdout.readline().strip()
+
+        if timeout is None:
+            # if no timeout, use usual subprocess stdout
+            line = self._child.stdout.readline().strip()
+        else:
+            # if timeout, use unix select
+            select_result = select([self._child.stdout], [], [], timeout)
+            if select_result == ([], [], []): # this happens when the timeout is reached
+                raise TimeoutError('cp2k took too long to respond')
+            line = select_result[0][0].readline().strip()
         if self._debug:
             print('Received: ' + line)
         self.isready = line == '* READY'
         return line
 
-    def expect(self, line):
+    def expect(self, line, timeout=None):
         """Receive a line and asserts that it matches the expected one"""
-        received = self.recv()
+        received = self.recv(timeout=timeout)
         assert received == line
 
 
