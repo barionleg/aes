@@ -45,3 +45,6 @@ List of all Methods
 
 .. autoclass:: Phonons
    :members:
+
+.. autoclass:: PhononsFromFile
+   :members:
