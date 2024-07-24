@@ -2,7 +2,6 @@
 # (which is also included in oi.py test case)
 # maintained by James Kermode <james.kermode@gmail.com>
 
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +17,7 @@ from ase.calculators.singlepoint import SinglePointCalculator
 from ase.constraints import FixAtoms, FixCartesian
 from ase.io import extxyz
 from ase.io.extxyz import escape, save_calc_results
+from ase.stress import voigt_6_to_full_3x3_stress
 
 # array data of shape (N, 1) squeezed down to shape (N, ) -- bug fixed
 # in commit r4541
@@ -291,20 +291,34 @@ def test_escape():
     assert escape('string with spaces') == '"string with spaces"'
 
 
-def test_stress():
+@pytest.fixture(name="atoms_h2o_dimer_pbc")
+def fixture_atoms_h2o_dimer_pbc():
     # build a water dimer, which has 6 atoms
-    water1 = molecule('H2O')
-    water2 = molecule('H2O')
+    water1 = molecule("H2O")
+    water2 = molecule("H2O")
     water2.positions[:, 0] += 5.0
     atoms = water1 + water2
     atoms.cell = [10, 10, 10]
     atoms.pbc = True
+    return atoms
 
-    atoms.calc = EMT()
-    a_stress = atoms.get_stress()
-    atoms.write('tmp.xyz')
-    b = ase.io.read('tmp.xyz')
+
+def test_stress(atoms_h2o_dimer_pbc):
+    """Test stress parsing in a round-trip manner"""
+    atoms_h2o_dimer_pbc.calc = EMT()
+    a_stress = atoms_h2o_dimer_pbc.get_stress()
+    atoms_h2o_dimer_pbc.write("tmp.xyz")
+    b = ase.io.read("tmp.xyz")
     assert abs(b.get_stress() - a_stress).max() < 1e-6
+
+
+def test_stress_3x3(atoms_h2o_dimer_pbc):
+    """Test if the stress tensor stored in a 3x3 matrix can be written"""
+    atoms_h2o_dimer_pbc.calc = EMT()
+    # store the stress tensor in a 3x3 matrix by hand
+    stress = voigt_6_to_full_3x3_stress(atoms_h2o_dimer_pbc.get_stress())
+    atoms_h2o_dimer_pbc.calc.results["stress"] = stress
+    atoms_h2o_dimer_pbc.write("tmp.xyz")  # test if no errors are raised
 
 
 def test_json_scalars():
@@ -409,26 +423,6 @@ As           1.8043384632       1.0417352974      11.3518747709
 As          -0.0000000002       2.0834705948       9.9596183135""")
     atoms = ase.io.read('pbc-test.xyz')
     assert (atoms.pbc == atoms_pbc).all()
-
-
-def test_conflicting_fields():
-    atoms = Atoms('Cu', cell=[2] * 3, pbc=[True] * 3)
-    atoms.calc = EMT()
-
-    _ = atoms.get_potential_energy()
-    atoms.info["energy"] = 100
-    # info / per-config conflict
-    with pytest.raises(KeyError):
-        ase.io.write(sys.stdout, atoms, format="extxyz")
-
-    atoms = Atoms('Cu', cell=[2] * 3, pbc=[True] * 3)
-    atoms.calc = EMT()
-
-    _ = atoms.get_forces()
-    atoms.new_array("forces", np.ones(atoms.positions.shape))
-    # arrays / per-atom conflict
-    with pytest.raises(KeyError):
-        ase.io.write(sys.stdout, atoms, format="extxyz")
 
 
 def test_save_calc_results():

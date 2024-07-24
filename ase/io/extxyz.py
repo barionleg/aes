@@ -726,7 +726,8 @@ def read_xyz(fileobj, index=-1, properties_parser=key_val_str_to_dict):
         yield _read_xyz_frame(fileobj, natoms, properties_parser, nvec)
 
 
-def output_column_format(atoms, columns, arrays, write_info=True):
+def output_column_format(atoms, columns, arrays,
+                         write_info=True, results=None):
     """
     Helper function to build extended XYZ comment line
     """
@@ -785,6 +786,8 @@ def output_column_format(atoms, columns, arrays, write_info=True):
     info = {}
     if write_info:
         info.update(atoms.info)
+    if results is not None:
+        info.update(results)
     info['pbc'] = atoms.get_pbc()  # always save periodic boundary conditions
     comment_str += ' ' + key_val_dict_to_str(info)
 
@@ -819,16 +822,6 @@ def write_xyz(fileobj, images, comment='', columns=None,
     for atoms in images:
         natoms = len(atoms)
 
-        if write_results:
-            calculator = atoms.calc
-            atoms = atoms.copy()
-
-            save_calc_results(atoms, calculator, calc_prefix="")
-
-            if atoms.info.get('stress', np.array([])).shape == (6,):
-                atoms.info['stress'] = \
-                    voigt_6_to_full_3x3_stress(atoms.info['stress'])
-
         if columns is None:
             fr_cols = (['symbols', 'positions']
                        + [key for key in atoms.arrays if
@@ -844,6 +837,30 @@ def write_xyz(fileobj, images, comment='', columns=None,
             fr_cols = ['symbols', 'positions']
             write_info = False
             write_results = False
+
+        per_frame_results = {}
+        per_atom_results = {}
+        if write_results:
+            calculator = atoms.calc
+            if calculator is not None:
+                results = getattr(calculator, 'results', {})
+                for key in all_outputs:
+                    value = results.get(key, None)
+                    if value is None:
+                        # skip missing calculator results
+                        continue
+                    if key in per_config_properties:
+                        # per-frame quantities (energy, stress)
+                        # special case for stress, which should be converted
+                        # to 3x3 matrices before writing
+                        # special case for stress, which should be converted
+                        # to 3x3 matrices before writing
+                        if key == 'stress' and value.shape == (6,):
+                            value = voigt_6_to_full_3x3_stress(value)
+                        per_frame_results[key] = value
+                    else:
+                        # per-atom quantities (forces, energies, stresses)
+                        per_atom_results[key] = value
 
         # Move symbols and positions to first two properties
         if 'symbols' in fr_cols:
@@ -915,10 +932,17 @@ def write_xyz(fileobj, images, comment='', columns=None,
             else:
                 raise ValueError(f'Missing array "{column}"')
 
+        if write_results:
+            for key in per_atom_results:
+                assert key not in fr_cols
+                fr_cols += [key]
+            arrays.update(per_atom_results)
+
         comm, ncols, dtype, fmt = output_column_format(atoms,
                                                        fr_cols,
                                                        arrays,
-                                                       write_info)
+                                                       write_info,
+                                                       per_frame_results)
 
         if plain or comment != '':
             # override key/value pairs with user-speficied comment string
