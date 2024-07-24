@@ -865,15 +865,7 @@ class Atoms:
 
         # Add ideal gas contribution, if applicable
         if include_ideal_gas and self.has('momenta'):
-            stresscomp = np.array([[0, 5, 4], [5, 1, 3], [4, 3, 2]])
-            p = self.get_momenta()
-            masses = self.get_masses()
-            invmass = 1.0 / masses
-            invvol = 1.0 / self.get_volume()
-            for alpha in range(3):
-                for beta in range(alpha, 3):
-                    stress[stresscomp[alpha, beta]] -= (
-                        p[:, alpha] * p[:, beta] * invmass).sum() * invvol
+            stress += self.get_kinetic_stress()
 
         if voigt:
             return stress
@@ -905,17 +897,47 @@ class Atoms:
         # It might be good to check this here, but adds computational overhead.
 
         if include_ideal_gas and self.has('momenta'):
-            stresscomp = np.array([[0, 5, 4], [5, 1, 3], [4, 3, 2]])
-            if hasattr(self._calc, 'get_atomic_volumes'):
-                invvol = 1.0 / self._calc.get_atomic_volumes()
-            else:
-                invvol = self.get_global_number_of_atoms() / self.get_volume()
-            p = self.get_momenta()
-            invmass = 1.0 / self.get_masses()
-            for alpha in range(3):
-                for beta in range(alpha, 3):
-                    stresses[:, stresscomp[alpha, beta]] -= (
-                        p[:, alpha] * p[:, beta] * invmass * invvol)
+            stresses += self.get_kinetic_stresses()
+
+        if voigt:
+            return stresses
+        else:
+            stresses_3x3 = [voigt_6_to_full_3x3_stress(s) for s in stresses]
+            return np.array(stresses_3x3)
+
+    def get_kinetic_stress(self, voigt=True):
+        """Calculate the kinetic part of the Virial stress tensor."""
+        stress = np.zeros(6)  # Voigt notation
+        stresscomp = np.array([[0, 5, 4], [5, 1, 3], [4, 3, 2]])
+        p = self.get_momenta()
+        masses = self.get_masses()
+        invmass = 1.0 / masses
+        invvol = 1.0 / self.get_volume()
+        for alpha in range(3):
+            for beta in range(alpha, 3):
+                stress[stresscomp[alpha, beta]] -= (
+                    p[:, alpha] * p[:, beta] * invmass).sum() * invvol
+
+        if voigt:
+            return stress
+        else:
+            return voigt_6_to_full_3x3_stress(stress)
+
+    def get_kinetic_stresses(self, voigt=True):
+        """Calculate the kinetic part of the Virial stress of all the atoms."""
+        stresses = np.zeros((len(self), 6))  # Voigt notation
+        stresscomp = np.array([[0, 5, 4], [5, 1, 3], [4, 3, 2]])
+        if hasattr(self._calc, 'get_atomic_volumes'):
+            invvol = 1.0 / self._calc.get_atomic_volumes()
+        else:
+            invvol = self.get_global_number_of_atoms() / self.get_volume()
+        p = self.get_momenta()
+        invmass = 1.0 / self.get_masses()
+        for alpha in range(3):
+            for beta in range(alpha, 3):
+                stresses[:, stresscomp[alpha, beta]] -= (
+                    p[:, alpha] * p[:, beta] * invmass * invvol)
+
         if voigt:
             return stresses
         else:
