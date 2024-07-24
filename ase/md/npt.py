@@ -644,7 +644,12 @@ class NPT(MolecularDynamics):
         """(Re)calculate some constants when pfactor,
         ttime or temperature have been changed."""
 
-        n = self._getnatoms()
+        dof = self._getnatoms() * 3
+        for constraint in self.atoms._constraints:
+            dof -= constraint.get_removed_dof(self)
+        # the dof of constrainted atoms should be removed
+        # since these atotms have no kinetic energy.
+        n = dof / 3
         if self.ttime is None:
             self.tfact = 0.0
         else:
