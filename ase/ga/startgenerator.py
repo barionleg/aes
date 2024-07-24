@@ -4,8 +4,11 @@ import numpy as np
 from ase import Atoms
 from ase.build import molecule
 from ase.data import atomic_numbers
-from ase.ga.utilities import (atoms_too_close, atoms_too_close_two_sets,
-                              closest_distances_generator)
+from ase.ga.utilities import (
+    atoms_too_close,
+    atoms_too_close_two_sets,
+    closest_distances_generator,
+)
 
 
 class StartGenerator:

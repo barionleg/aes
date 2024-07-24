@@ -8,9 +8,12 @@ import os
 import warnings
 from pathlib import Path
 
-from ase.calculators.genericfileio import (BaseProfile, CalculatorTemplate,
-                                           GenericFileIOCalculator,
-                                           read_stdout)
+from ase.calculators.genericfileio import (
+    BaseProfile,
+    CalculatorTemplate,
+    GenericFileIOCalculator,
+    read_stdout,
+)
 from ase.io import read, write
 from ase.io.espresso import Namelist
 

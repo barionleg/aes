@@ -1,7 +1,7 @@
 import numpy as np
 
-from ase.parallel import world, broadcast
 from ase.geometry import get_distances
+from ase.parallel import broadcast, world
 
 
 def random_unit_vector(rng):

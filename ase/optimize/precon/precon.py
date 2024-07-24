@@ -19,8 +19,10 @@ from ase.constraints import FixAtoms
 from ase.filters import Filter
 from ase.geometry import find_mic
 from ase.neighborlist import neighbor_list
-from ase.optimize.precon.neighbors import (estimate_nearest_neighbour_distance,
-                                           get_neighbours)
+from ase.optimize.precon.neighbors import (
+    estimate_nearest_neighbour_distance,
+    get_neighbours,
+)
 from ase.utils import longsum, tokenize_version
 
 try:

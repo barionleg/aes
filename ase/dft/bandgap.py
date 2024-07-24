@@ -1,8 +1,7 @@
-from dataclasses import dataclass
 import warnings
+from dataclasses import dataclass
 
 import numpy as np
-
 
 spin_error = (
     'The spin keyword is no longer supported.  Please call the function '

@@ -4,9 +4,11 @@ from math import log, sqrt
 
 import numpy as np
 
-from ase.calculators.calculator import (Calculator,
-                                        PropertyNotImplementedError,
-                                        all_changes)
+from ase.calculators.calculator import (
+    Calculator,
+    PropertyNotImplementedError,
+    all_changes,
+)
 from ase.data import atomic_numbers, chemical_symbols
 from ase.neighborlist import NeighborList
 from ase.units import Bohr

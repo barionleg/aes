@@ -1,13 +1,16 @@
+import shlex
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
 from os import PathLike
 from pathlib import Path
-import shlex
 from typing import Any, Iterable, List, Mapping, Optional, Set
 
 from ase.calculators.abc import GetOutputsMixin
 from ase.calculators.calculator import (
-    BaseCalculator, _validate_command, BadConfiguration)
+    BadConfiguration,
+    BaseCalculator,
+    _validate_command,
+)
 from ase.config import cfg as _cfg
 
 

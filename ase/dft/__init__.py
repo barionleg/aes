@@ -1,4 +1,5 @@
 import numpy as np
+
 try:
     from numpy import trapezoid  # NumPy 2.0.0
 except ImportError:

@@ -8,8 +8,14 @@ from ase import Atoms
 from ase.build import molecule
 from ase.calculators.calculator import compare_atoms
 from ase.io.bytes import parse_atoms, to_bytes
-from ase.io.cif import (CIFLoop, NoStructureData, parse_cif, parse_loop,
-                        read_cif, write_cif)
+from ase.io.cif import (
+    CIFLoop,
+    NoStructureData,
+    parse_cif,
+    parse_loop,
+    read_cif,
+    write_cif,
+)
 
 
 def parse_string(string):

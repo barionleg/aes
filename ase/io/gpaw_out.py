@@ -4,8 +4,10 @@ from typing import List, Tuple, Union
 import numpy as np
 
 from ase.atoms import Atoms
-from ase.calculators.singlepoint import (SinglePointDFTCalculator,
-                                         SinglePointKPoint)
+from ase.calculators.singlepoint import (
+    SinglePointDFTCalculator,
+    SinglePointKPoint,
+)
 
 
 def index_startswith(lines: List[str], string: str) -> int:

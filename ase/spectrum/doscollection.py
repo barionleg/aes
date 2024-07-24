@@ -1,7 +1,16 @@
 import collections
 from functools import reduce, singledispatch
-from typing import (Any, Dict, Iterable, List, Optional, Sequence, TypeVar,
-                    Union, overload)
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import numpy as np
 

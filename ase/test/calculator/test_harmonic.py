@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal
+
 try:
     from numpy import trapezoid  # NumPy 2.0.0
 except ImportError:
@@ -13,8 +14,11 @@ from ase.calculators.harmonic import HarmonicCalculator, HarmonicForceField
 from ase.calculators.mixing import MixedCalculator
 from ase.geometry.geometry import get_distances_derivatives
 from ase.md.andersen import Andersen
-from ase.md.velocitydistribution import (MaxwellBoltzmannDistribution,
-                                         Stationary, ZeroRotation)
+from ase.md.velocitydistribution import (
+    MaxwellBoltzmannDistribution,
+    Stationary,
+    ZeroRotation,
+)
 from ase.optimize import BFGS
 from ase.units import fs
 from ase.vibrations import Vibrations

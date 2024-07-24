@@ -24,8 +24,17 @@ import warnings
 from importlib import import_module
 from importlib.metadata import entry_points
 from pathlib import Path, PurePath
-from typing import (IO, Any, Dict, Iterable, List, Optional, Sequence, Tuple,
-                    Union)
+from typing import (
+    IO,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from ase.atoms import Atoms
 from ase.parallel import parallel_function, parallel_generator

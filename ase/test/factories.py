@@ -16,8 +16,10 @@ from ase.calculators.dftb import Dftb
 from ase.calculators.dftd3 import DFTD3
 from ase.calculators.elk import ELK
 from ase.calculators.espresso import Espresso, EspressoTemplate
-from ase.calculators.exciting.exciting import (ExcitingGroundStateCalculator,
-                                               ExcitingGroundStateTemplate)
+from ase.calculators.exciting.exciting import (
+    ExcitingGroundStateCalculator,
+    ExcitingGroundStateTemplate,
+)
 from ase.calculators.genericfileio import read_stdout
 from ase.calculators.gromacs import Gromacs, get_gromacs_version
 from ase.calculators.mopac import MOPAC

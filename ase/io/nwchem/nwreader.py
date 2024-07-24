@@ -4,8 +4,10 @@ from collections import OrderedDict
 import numpy as np
 
 from ase import Atoms
-from ase.calculators.singlepoint import (SinglePointDFTCalculator,
-                                         SinglePointKPoint)
+from ase.calculators.singlepoint import (
+    SinglePointDFTCalculator,
+    SinglePointKPoint,
+)
 from ase.units import Bohr, Hartree
 
 from .parser import _define_pattern

@@ -1,13 +1,13 @@
+from itertools import product
 from math import cos, pi, sin
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
-from itertools import product
-from ase.cell import Cell
-
-from scipy.spatial.transform import Rotation
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import Axes3D, proj3d
+from scipy.spatial.transform import Rotation
+
+from ase.cell import Cell
 
 
 def bz_vertices(icell, dim=3):

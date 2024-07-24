@@ -6,15 +6,44 @@ import pytest
 from ase import Atoms
 from ase.build import bulk, molecule
 from ase.dft.kpoints import monkhorst_pack
-from ase.dft.wannier import (Wannier, arbitrary_s_orbitals, calculate_weights,
-                             gram_schmidt, init_orbitals, lowdin, md_min,
-                             neighbor_k_search, rotation_from_projection, scdm,
-                             search_for_gamma_point, steepest_descent)
+from ase.dft.wannier import (
+    Wannier,
+    arbitrary_s_orbitals,
+    calculate_weights,
+    gram_schmidt,
+    init_orbitals,
+    lowdin,
+    md_min,
+    neighbor_k_search,
+    rotation_from_projection,
+    scdm,
+    search_for_gamma_point,
+    steepest_descent,
+)
 from ase.dft.wannierstate import random_orthogonal_matrix
 from ase.io.cube import read_cube
-from ase.lattice import (BCC, BCT, CRECT, CUB, FCC, HEX, HEX2D, LINE, MCL,
-                         MCLC, OBL, ORC, ORCC, ORCF, ORCI, RECT, RHL, SQR, TET,
-                         TRI)
+from ase.lattice import (
+    BCC,
+    BCT,
+    CRECT,
+    CUB,
+    FCC,
+    HEX,
+    HEX2D,
+    LINE,
+    MCL,
+    MCLC,
+    OBL,
+    ORC,
+    ORCC,
+    ORCF,
+    ORCI,
+    RECT,
+    RHL,
+    SQR,
+    TET,
+    TRI,
+)
 from ase.transport.tools import dagger, normalize
 
 calc = pytest.mark.calculator

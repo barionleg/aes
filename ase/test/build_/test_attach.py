@@ -2,8 +2,11 @@ import numpy as np
 import pytest
 
 from ase.build import fcc111, molecule
-from ase.build.attach import (attach, attach_randomly,
-                              attach_randomly_and_broadcast)
+from ase.build.attach import (
+    attach,
+    attach_randomly,
+    attach_randomly_and_broadcast,
+)
 from ase.parallel import world
 
 

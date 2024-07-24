@@ -6,6 +6,7 @@ from numpy.linalg import eigh
 
 from ase import Atoms
 from ase.optimize.optimize import Optimizer, UnitCellFilter
+from ase.parallel import world
 
 
 class BFGS(Optimizer):

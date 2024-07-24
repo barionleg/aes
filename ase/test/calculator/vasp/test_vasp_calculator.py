@@ -8,11 +8,17 @@ import pytest
 
 from ase import Atoms
 from ase.build import molecule
-from ase.calculators.calculator import (CalculatorSetupError,
-                                        get_calculator_class)
+from ase.calculators.calculator import (
+    CalculatorSetupError,
+    get_calculator_class,
+)
 from ase.calculators.vasp import Vasp
-from ase.calculators.vasp.vasp import (check_atoms, check_atoms_type,
-                                       check_cell, check_pbc)
+from ase.calculators.vasp.vasp import (
+    check_atoms,
+    check_atoms_type,
+    check_cell,
+    check_pbc,
+)
 
 
 @pytest.fixture(name="atoms")

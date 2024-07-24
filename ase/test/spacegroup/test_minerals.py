@@ -1,14 +1,16 @@
-import pytest
-
-from pathlib import Path
 from dataclasses import dataclass
 from itertools import product
+from pathlib import Path
 
 import numpy as np
+import pytest
 
 from ase.io import read
-from ase.spacegroup.symmetrize import (check_symmetry, get_symmetrized_atoms,
-                                       IntermediateDatasetError)
+from ase.spacegroup.symmetrize import (
+    IntermediateDatasetError,
+    check_symmetry,
+    get_symmetrized_atoms,
+)
 
 spglib = pytest.importorskip('spglib')
 

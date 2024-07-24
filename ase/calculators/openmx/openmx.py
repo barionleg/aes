@@ -27,9 +27,13 @@ import warnings
 
 import numpy as np
 
-from ase.calculators.calculator import (Calculator, FileIOCalculator,
-                                        all_changes, equal,
-                                        kptdensity2monkhorstpack)
+from ase.calculators.calculator import (
+    Calculator,
+    FileIOCalculator,
+    all_changes,
+    equal,
+    kptdensity2monkhorstpack,
+)
 from ase.calculators.openmx.default_settings import default_dictionary
 from ase.calculators.openmx.parameters import OpenMXParameters
 from ase.calculators.openmx.reader import get_file_name, read_openmx

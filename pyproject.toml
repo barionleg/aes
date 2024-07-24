@@ -90,6 +90,7 @@ select = [
     "F",  # Pyflakes
     "E",  # pycodestyle
     "W",  # pycodestyle
+    "I"   # isort
 ]
 ignore = [
     "F841",  # unused-variable

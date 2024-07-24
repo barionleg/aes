@@ -3,8 +3,10 @@ import pytest
 
 from ase.build import bulk
 from ase.calculators.abc import GetOutputsMixin
-from ase.calculators.singlepoint import (SinglePointDFTCalculator,
-                                         arrays_to_kpoints)
+from ase.calculators.singlepoint import (
+    SinglePointDFTCalculator,
+    arrays_to_kpoints,
+)
 from ase.outputs import Properties, all_outputs
 
 

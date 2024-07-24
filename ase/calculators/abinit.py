@@ -7,8 +7,11 @@ from pathlib import Path
 from subprocess import check_output
 
 import ase.io.abinit as io
-from ase.calculators.genericfileio import (BaseProfile, CalculatorTemplate,
-                                           GenericFileIOCalculator)
+from ase.calculators.genericfileio import (
+    BaseProfile,
+    CalculatorTemplate,
+    GenericFileIOCalculator,
+)
 
 
 class AbinitProfile(BaseProfile):

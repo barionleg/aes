@@ -9,11 +9,11 @@ Notes
 """
 import warnings
 from io import StringIO
-import pytest
-from ase.io import read
-from ase.io import ParseError
-from ase.calculators.calculator import compare_atoms
 
+import pytest
+
+from ase.calculators.calculator import compare_atoms
+from ase.io import ParseError, read
 
 # -----------------------------------------------------------
 # The following strings give the components of an example gif file

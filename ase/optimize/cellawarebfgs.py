@@ -7,6 +7,7 @@ from ase import Atoms
 from ase.geometry import cell_to_cellpar
 from ase.optimize import BFGS
 from ase.optimize.optimize import Dynamics
+from ase.parallel import world
 from ase.units import GPa
 
 
