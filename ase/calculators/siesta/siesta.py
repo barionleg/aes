@@ -17,6 +17,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
+import math
+
 
 import numpy as np
 
@@ -86,6 +88,22 @@ def bandpath2bandpoints(path):
     return '\n'.join([
         'BandLinesScale ReciprocalLatticeVectors',
         format_block('BandPoints', path.kpts)])
+
+def cart2sph(vec):
+    """
+    Convert a cartesian vector to spherical coordinates.
+    """
+    x, y, z = vec
+    r = np.linalg.norm(vec)               # r
+    if r < 1e-10:
+        theta, phi = 0.0, 0.0
+    else:
+        # note that there are many conventions, here is the ISO convention.
+        phi = math.atan2(y, x) * 180/math.pi                          # phi
+        theta = math.acos(z/r) * 180/math.pi                        # theta
+    return r, theta, phi
+
+
 
 
 class SiestaParameters(Parameters):
@@ -773,7 +791,9 @@ class FDFWriter:
 
         yield '%block DM.InitSpin\n'
         if len(magmoms) != 0 and isinstance(magmoms[0], np.ndarray):
-            for n, M in enumerate(magmoms):
+            for n, Mcart in enumerate(magmoms):
+                # Note that siesta input use the spherical coordinates
+                M = cart2sph(Mcart)
                 if M[0] != 0:
                     yield ('    %d %.14f %.14f %.14f \n'
                            % (n + 1, M[0], M[1], M[2]))
