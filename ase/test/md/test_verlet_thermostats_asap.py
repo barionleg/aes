@@ -11,7 +11,7 @@ from ase.units import fs
 # test Verlet, Langevin and Andersen with asap3
 @pytest.mark.slow()
 def test_verlet_thermostats_asap(asap3, testdir, allraise):
-    rng = np.random.RandomState(0)
+    rng = np.random.default_rng(0)
     calculator = asap3.EMT()
     T_low = 10
     T_high = 300

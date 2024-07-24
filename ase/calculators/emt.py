@@ -337,3 +337,15 @@ class EMT(Calculator):
         f = ((dedrs + dedro) * invr)[:, None] * d
         self.forces[a1] += np.add.reduce(f, axis=0)
         self.stress += 0.5 * np.dot(d.T, f)  # compensate double counting
+
+    @classmethod
+    def fromdict(cls, dict):
+        calc = cls()
+
+        calc.parameters.update(dict.get('parameters', {}))
+        calc.atoms = dict.get('atoms')
+        calc.results = dict.get('results', {})
+
+        calc.initialize(calc.atoms)
+
+        return calc

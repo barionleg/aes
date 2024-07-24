@@ -765,6 +765,10 @@ class Calculator(BaseCalculator):
                 if default != '_no_default_' and equal(value, default):
                     continue
             dct[key] = value
+
+        dct["atoms"] = self.atoms
+        dct["results"] = self.results
+
         return dct
 
     def reset(self):
