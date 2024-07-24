@@ -470,6 +470,7 @@ class SQLite3Database(Database):
                'positions': deblob(values[6], shape=(-1, 3)),
                'cell': deblob(values[7], shape=(3, 3))}
 
+        include_ext_tab = False
         if values[8] is not None:
             dct['pbc'] = (values[8] & np.array([1, 2, 4])).astype(bool)
         if values[9] is not None:
@@ -508,15 +509,17 @@ class SQLite3Database(Database):
             dct['key_value_pairs'] = decode(values[25])
         if len(values) >= 27 and values[26] != 'null':
             dct['data'] = decode(values[26], lazy=True)
+            include_ext_tab = True
 
         # Now we need to update with info from the external tables
-        external_tab = self._get_external_table_names()
-        tables = {}
-        for tab in external_tab:
-            row = self._read_external_table(tab, dct["id"])
-            tables[tab] = row
+        if include_ext_tab:
+            external_tab = self._get_external_table_names()
+            tables = {}
+            for tab in external_tab:
+                row = self._read_external_table(tab, dct["id"])
+                tables[tab] = row
 
-        dct.update(tables)
+            dct.update(tables)
         return AtomsRow(dct)
 
     def _old2new(self, values):
