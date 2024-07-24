@@ -1,0 +1,102 @@
+format, description, capabilities
+:ref:`abinit-gsr`, ABINIT GSR file, R
+:ref:`abinit-in`, ABINIT input file, RW
+:ref:`abinit-out`, ABINIT output file, R
+:ref:`acemolecule-input`, ACE input file, R
+:ref:`acemolecule-out`, ACE output file, R
+:ref:`aims`, FHI-aims geometry file, RW
+:ref:`aims-output`, FHI-aims output, R+
+:ref:`bundletrajectory`, ASE bundle trajectory, RW+
+:ref:`castep-castep`, CASTEP output file, R+
+:ref:`castep-cell`, CASTEP geom file, RW
+:ref:`castep-geom`, CASTEP trajectory file, R+
+:ref:`castep-md`, CASTEP molecular dynamics file, R+
+:ref:`castep-phonon`, CASTEP phonon file, R
+:ref:`cfg`, AtomEye configuration, RW
+:ref:`cif`, CIF-file, RW+
+:ref:`cjson`, Chemical json file, R
+:ref:`cmdft`, CMDFT-file, R
+:ref:`cp2k-dcd`, CP2K DCD file, R+
+:ref:`cp2k-restart`, CP2K restart file, R
+:ref:`crystal`, Crystal fort.34 format, RW
+:ref:`cube`, CUBE file, RW
+:ref:`dacapo-text`, Dacapo text output, R
+:ref:`db`, ASE SQLite database file, RW+
+:ref:`dftb`, DftbPlus input file, RW
+:ref:`dlp-history`, DL_POLY HISTORY file, R+
+:ref:`dlp4`, DL_POLY_4 CONFIG file, RW
+:ref:`dmol-arc`, DMol3 arc file, RW+
+:ref:`dmol-car`, DMol3 structure file, RW
+:ref:`dmol-incoor`, DMol3 structure file, RW
+:ref:`elk`, ELK atoms definition from GEOMETRY.OUT, R
+:ref:`elk-in`, ELK input file, W
+:ref:`eon`, EON CON file, RW+
+:ref:`eps`, Encapsulated Postscript, W
+:ref:`espresso-in`, Quantum espresso in file, RW
+:ref:`espresso-out`, Quantum espresso out file, R+
+:ref:`exciting`, exciting output, 
+:ref:`extxyz`, Extended XYZ file, RW+
+:ref:`findsym`, FINDSYM-format, W+
+:ref:`fleur-inpgen`, FLEUR inpgen input file, RW
+:ref:`fleur-outxml`, FLEUR output XML input file, R
+:ref:`fleur-xml`, FLEUR XML input file, R
+:ref:`gamess-us-in`, GAMESS-US input file, W
+:ref:`gamess-us-out`, GAMESS-US output file, R
+:ref:`gamess-us-punch`, GAMESS-US punchcard file, R
+:ref:`gaussian-in`, Gaussian com (input) file, RW
+:ref:`gaussian-out`, Gaussian output file, R+
+:ref:`gen`, DFTBPlus GEN format, RW
+:ref:`gif`, Graphics interchange format, W+
+:ref:`gpaw-out`, GPAW text output, R+
+:ref:`gpumd`, GPUMD input file, RW
+:ref:`gpw`, GPAW restart-file, R
+:ref:`gromacs`, Gromacs coordinates, RW
+:ref:`gromos`, Gromos96 geometry file, RW
+:ref:`html`, X3DOM HTML, W
+:ref:`json`, ASE JSON database file, RW+
+:ref:`jsv`, JSV file format, RW
+:ref:`lammps-data`, LAMMPS data file, RW
+:ref:`lammps-dump-binary`, LAMMPS binary dump file, R+
+:ref:`lammps-dump-text`, LAMMPS text dump file, R+
+:ref:`magres`, MAGRES ab initio NMR data file, RW
+:ref:`mol`, MDL Molfile, R
+:ref:`mp4`, MP4 animation, W+
+:ref:`mustem`, muSTEM xtl file, RW
+:ref:`mysql`, ASE MySQL database file, RW+
+:ref:`netcdftrajectory`, AMBER NetCDF trajectory file, RW+
+:ref:`nomad-json`, JSON from Nomad archive, R+
+:ref:`nwchem-in`, NWChem input file, RW
+:ref:`nwchem-out`, NWChem output file, R+
+:ref:`octopus-in`, Octopus input file, R
+:ref:`onetep-in`, ONETEP input file, RW
+:ref:`onetep-out`, ONETEP output file, R+
+:ref:`png`, Portable Network Graphics, W
+:ref:`postgresql`, ASE PostgreSQL database file, RW+
+:ref:`pov`, Persistance of Vision, W
+:ref:`prismatic`, prismatic and computem XYZ-file, RW
+:ref:`proteindatabank`, Protein Data Bank, RW+
+:ref:`py`, Python file, W+
+:ref:`qbox`, QBOX output file, R+
+:ref:`res`, SHELX format, RW
+:ref:`rmc6f`, RMCProfile, RW
+:ref:`sdf`, SDF format, R
+:ref:`siesta-xv`, Siesta .XV file, R
+:ref:`struct`, WIEN2k structure file, RW
+:ref:`struct_out`, SIESTA STRUCT file, R
+:ref:`sys`, qball sys file, RW
+:ref:`traj`, ASE trajectory, RW+
+:ref:`turbomole`, TURBOMOLE coord file, RW
+:ref:`turbomole-gradient`, TURBOMOLE gradient file, R+
+:ref:`v-sim`, V_Sim ascii file, RW
+:ref:`vasp`, VASP POSCAR/CONTCAR, RW
+:ref:`vasp-out`, VASP OUTCAR file, R+
+:ref:`vasp-xdatcar`, VASP XDATCAR file, RW+
+:ref:`vasp-xml`, VASP vasprun.xml file, R+
+:ref:`vti`, VTK XML Image Data, W
+:ref:`vtu`, VTK XML Unstructured Grid, W
+:ref:`wout`, Wannier90 output, R
+:ref:`x3d`, X3D, W
+:ref:`xsd`, Materials Studio file, RW
+:ref:`xsf`, XCrySDen Structure File, RW+
+:ref:`xtd`, Materials Studio file, RW+
+:ref:`xyz`, XYZ-file, RW+

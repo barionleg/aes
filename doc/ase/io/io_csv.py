@@ -1,10 +1,9 @@
 # creates: io.csv
-from ase.io.formats import all_formats, get_ioformat
+from ase.plugins import io_formats
 
 with open('io.csv', 'w') as fd:
     print('format, description, capabilities', file=fd)
-    for format in sorted(all_formats):
-        io = get_ioformat(format)
+    for io in io_formats.sorted:
         c = ''
         if io.can_read:
             c = 'R'
@@ -12,5 +11,5 @@ with open('io.csv', 'w') as fd:
             c += 'W'
         if not io.single:
             c += '+'
-        print(f':ref:`{format}`, {all_formats[format][0]}, {c}',
+        print(f':ref:`{io.name}`, {io.description}, {c}',
               file=fd)

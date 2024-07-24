@@ -10,7 +10,7 @@ import pytest
 
 from ase.build import bulk
 from ase.io import formats, read, write
-from ase.io.formats import define_external_io_format
+from ase.plugins.external import define_external_io_format
 from ase.utils.plugins import ExternalIOFormat
 
 
@@ -66,10 +66,15 @@ def test_external_ioformat_valid(tmp_path):
         assert file.read() == 'dummy output'
 
 
+@pytest.mark.xfail
 def test_external_ioformat_already_existing():
     """
     Test of the external io format utility correctly
     refusing to register an IOformat that is already present
+
+
+    with plugins, now it is valid to have two plugins that are able to
+    read the same extension, so I comment the test
     """
 
     test_entry_point = EntryPoint(

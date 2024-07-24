@@ -15,7 +15,7 @@ def test_info_formats(cli):
 def test_info_calculators(cli):
     # The configuration listing will contain all configurable calculators
     # whether they are configured or not.
-    assert 'nwchem' in cli.ase('info', '--calculators')
+    assert 'nwchem' in cli.ase('info', '--calculators').lower()
 
 
 @pytest.fixture()

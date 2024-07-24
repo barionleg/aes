@@ -19,7 +19,7 @@ def excitingtools():
     return pytest.importorskip('excitingtools')
 
 
-@pytest.mark.parametrize('name', ioformats)
+@pytest.mark.parametrize('name', ioformats.keys())
 def test_ioformat(name, excitingtools):
     """Test getting the full description of each ioformat."""
     ioformat = ioformats[name]

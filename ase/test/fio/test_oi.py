@@ -88,7 +88,7 @@ def all_tested_formats():
     except ModuleNotFoundError:
         skip += ['exciting']
 
-    return sorted(set(all_formats) - set(skip))
+    return sorted(set(map(lambda x: x.name, all_formats.values())) - set(skip))
 
 
 @pytest.mark.parametrize('format', all_tested_formats())
@@ -100,14 +100,14 @@ def test_ioformat(format, atoms, catch_warnings):
 
     kwargs = {}
 
-    if format == 'dlp4':
-        atoms.pbc = (1, 1, 0)
+    io = ioformats[format]
+    if not io.are_such_pbc_allowed(atoms.pbc):
+        atoms.pbc = io.allowed_pbc[0]
     elif format == 'espresso-in':
         kwargs = {'pseudopotentials': {'H': 'plum', 'Au': 'lemon'}}
 
     images = [atoms, atoms]
 
-    io = ioformats[format]
     print('{:20}{}{}{}{}'.format(format,
                                  ' R'[io.can_read],
                                  ' W'[io.can_write],

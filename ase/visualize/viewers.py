@@ -1,56 +1,64 @@
 """
 Module for managing viewers
 
-View plugins can be registered through the entrypoint system in with the
-following in a module, such as a `viewer.py` file:
+For docs on importing viewers using the old entry-point mechanism,
+please see the ase.plugins.external.
+Now the preffered way how to define a viewer is to create plugin:
+package ase.plugins.<yourplugin> and in its __init__.py do
 
-```python3
-VIEWER_ENTRYPOINT = ExternalViewer(
-    desc="Visualization using <my package>",
-    module="my_package.viewer"
-)
-```
-
-Where module `my_package.viewer` contains a `view_my_viewer` function taking
-and `ase.Atoms` object as the first argument, and also `**kwargs`.
-
-Then ones needs to register an entry point in `pyproject.toml` with
-
-```toml
-[project.entry-points."ase.visualize"]
-my_viewer = "my_package.viewer:VIEWER_ENTRYPOINT"
-```
-
-After this, call to `ase.visualize.view(atoms, viewer='my_viewer')` will be
-forwarded to `my_package.viewer.view_my_viewer` function.
-
+::
+  import register_viewer from ase.register
+  def ase_register():
+      register_viewer(...)
 """
+
 import pickle
 import subprocess
 import sys
 import tempfile
-import warnings
 from contextlib import contextmanager
 from importlib import import_module
-from importlib.metadata import entry_points
 from io import BytesIO
 from pathlib import Path
 
-from ase.io import write
-from ase.io.formats import ioformats
-from ase.utils.plugins import ExternalViewer
+from ase.register.listing import LazyListing
+from ase.utils import lazyproperty
+import ase.io
+from ase.register.pluggables import BasePluggable, Pluggables
 
 
 class UnknownViewerError(Exception):
     """The view tyep is unknown"""
 
 
-class AbstractViewer:
+class AbstractPluggableViewer(BasePluggable):
+
+    class_type = 'viewers'
+
+    def __init__(self, name):
+        self.name = name
+
     def view(self, *args, **kwargss):
         raise NotImplementedError
 
+    def implementation(self):
+        return self.view
 
-class PyViewer(AbstractViewer):
+    def __getstate__(self):
+        """ Just avoid de/serializing the plugin, save its name instead """
+        out = self.__dict__.copy()
+        if 'plugin' in out:
+            out['plugin'] = out['plugin'].name
+        return out
+
+    def __setstate__(self, state):
+        """ Just avoid de/serializing the plugin, save its name instead """
+        self.__dict__.update(state)
+        if 'plugin' in state:
+            self.plugin = ase.plugins.plugins[self.plugin]
+
+
+class PyViewer(AbstractPluggableViewer):
     def __init__(self, name: str, desc: str, module_name: str):
         """
         Instantiate an viewer
@@ -76,7 +84,7 @@ class PyViewer(AbstractViewer):
         return self._viewfunc()(atoms, *args, **kwargs)
 
 
-class CLIViewer(AbstractViewer):
+class CLIViewer(AbstractPluggableViewer):
     """Generic viewer for"""
 
     def __init__(self, name, fmt, argv):
@@ -86,7 +94,7 @@ class CLIViewer(AbstractViewer):
 
     @property
     def ioformat(self):
-        return ioformats[self.fmt]
+        return ase.plugins.io_formats[self.fmt]
 
     @contextmanager
     def mktemp(self, atoms, data=None):
@@ -105,9 +113,9 @@ class CLIViewer(AbstractViewer):
             path = Path(dirname) / f"atoms{suffix}"
             with path.open(mode) as fd:
                 if data is None:
-                    write(fd, atoms, format=self.fmt)
+                    ase.io.write(fd, atoms, format=self.fmt)
                 else:
-                    write(fd, atoms, format=self.fmt, data=data)
+                    ase.io.write(fd, atoms, format=self.fmt, data=data)
             yield path
 
     def view_blocking(self, atoms, data=None):
@@ -135,12 +143,27 @@ class CLIViewer(AbstractViewer):
         return proc
 
 
-VIEWERS = {}
+class ViewerPluggables(Pluggables):
+
+    item_type = AbstractPluggableViewer
+
+    def info(self, prefix='', opts={}, filter=None):
+        return f"{prefix}Viewers:\n" \
+               f"{prefix}--------\n" + \
+               super().info(prefix + '  ', opts, filter)
+
+    @lazyproperty
+    def cli_viewers(self):
+        return self.filter(lambda item: isinstance(item, CLIViewer))
+
+    @lazyproperty
+    def python_viewers(self):
+        return self.filter(lambda item: isinstance(item, PyViewer))
 
 
 def _pipe_to_ase_gui(atoms, repeat, **kwargs):
     buf = BytesIO()
-    write(buf, atoms, format="traj")
+    ase.io.write(buf, atoms, format="traj")
 
     args = [sys.executable, "-m", "ase", "gui", "-"]
     if repeat:
@@ -169,87 +192,7 @@ def define_viewer(
             fmt.view = _pipe_to_ase_gui
         else:
             fmt = PyViewer(name, desc, module_name=module)
-    VIEWERS[name] = fmt
     return fmt
-
-
-def define_external_viewer(entry_point):
-    """Define external viewer"""
-
-    viewer_def = entry_point.load()
-    if entry_point.name in VIEWERS:
-        raise ValueError(f"Format {entry_point.name} already defined")
-    if not isinstance(viewer_def, ExternalViewer):
-        raise TypeError(
-            "Wrong type for registering external IO formats "
-            f"in format {entry_point.name}, expected "
-            "ExternalViewer"
-        )
-    define_viewer(entry_point.name, **viewer_def._asdict(),
-                  external=True)
-
-
-def register_external_viewer_formats(group):
-    if hasattr(entry_points(), "select"):
-        viewer_entry_points = entry_points().select(group=group)
-    else:
-        viewer_entry_points = entry_points().get(group, ())
-
-    for entry_point in viewer_entry_points:
-        try:
-            define_external_viewer(entry_point)
-        except Exception as exc:
-            warnings.warn(
-                "Failed to register external "
-                f"Viewer {entry_point.name}: {exc}"
-            )
-
-
-define_viewer("ase", "View atoms using ase gui.")
-define_viewer("ngl", "View atoms using nglview.")
-define_viewer("mlab", "View atoms using matplotlib.")
-define_viewer("sage", "View atoms using sage.")
-define_viewer("x3d", "View atoms using x3d.")
-
-# CLI viweers that are internally supported
-define_viewer(
-    "avogadro", "View atoms using avogradro.", cli=True, fmt="cube",
-    argv=["avogadro"]
-)
-define_viewer(
-    "ase_gui_cli", "View atoms using ase gui.", cli=True, fmt="traj",
-    argv=[sys.executable, '-m', 'ase.gui'],
-)
-define_viewer(
-    "gopenmol",
-    "View atoms using gopenmol.",
-    cli=True,
-    fmt="extxyz",
-    argv=["runGOpenMol"],
-)
-define_viewer(
-    "rasmol",
-    "View atoms using rasmol.",
-    cli=True,
-    fmt="proteindatabank",
-    argv=["rasmol", "-pdb"],
-)
-define_viewer("vmd", "View atoms using vmd.", cli=True, fmt="cube",
-              argv=["vmd"])
-define_viewer(
-    "xmakemol",
-    "View atoms using xmakemol.",
-    cli=True,
-    fmt="extxyz",
-    argv=["xmakemol", "-f"],
-)
-
-register_external_viewer_formats("ase.visualize")
-
-CLI_VIEWERS = {key: value for key, value in VIEWERS.items()
-               if isinstance(value, CLIViewer)}
-PY_VIEWERS = {key: value for key, value in VIEWERS.items()
-              if isinstance(value, PyViewer)}
 
 
 def cli_main():
@@ -263,3 +206,14 @@ def cli_main():
 
 if __name__ == "__main__":
     cli_main()
+
+# Will be inited by ase.plugins.__init__ to avoid a circular imports
+# Deprecatd, will preffered way is to access the viewers by
+# ase.plugins.viewers
+VIEWERS: ViewerPluggables = None     # type: ignore[assignment]
+CLI_VIEWERS: LazyListing = None     # type: ignore[assignment]
+PY_VIEWERS: LazyListing = None      # type: ignore[assignment]
+
+# Just here, to avoid circular imports
+# Force load the plugins
+import ase.plugins  # NOQA: F401,E402

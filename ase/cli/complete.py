@@ -70,7 +70,8 @@ commands = {
          '-o', '--output', '-g', '--graph', '-t', '--terminal',
          '--interpolate', '-b', '--bonds', '-s', '--scale'],
     'info':
-        ['--files', '-v', '--verbose', '--formats', '--calculators'],
+        ['--files', '-v', '--verbose', '--config', '--formats',
+         '--calculators', '--viewers', '--plugins'],
     'nebplot':
         ['--nimages', '--share-x', '--share-y'],
     'nomad-get':

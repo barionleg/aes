@@ -1,3 +1,5 @@
+# To avoid circular import
+from .. import plugins  # NOQA: F401
 from ase.io.bundletrajectory import BundleTrajectory
 from ase.io.formats import iread, read, string2index, write
 from ase.io.netcdftrajectory import NetCDFTrajectory

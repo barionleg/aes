@@ -2,6 +2,9 @@
 # Try to avoid module level import statements here to reduce
 # import time during CLI execution
 
+from itertools import product
+from typing import Optional, List
+
 
 class CLICommand:
     """Print information about files or system.
@@ -15,32 +18,41 @@ class CLICommand:
         parser.add_argument('--files', nargs='*', metavar='PATH',
                             help='Print information about specified files.')
         parser.add_argument('-v', '--verbose', action='store_true',
-                            help='Show additional information about files.')
-        parser.add_argument('--formats', action='store_true',
-                            help='List file formats known to ASE.')
+                            help='Show more information about files.')
+        parser.add_argument('--config', action='store_true',
+                            help='List configured calculators')
+        parser.add_argument('--formats', nargs='*', metavar='NAME',
+                            dest='io_formats',
+                            help='List file formats: all known to ASE, or the '
+                                 'ones with the given string(s) in the name')
         parser.add_argument('--calculators', nargs='*', metavar='NAME',
-                            help='List all or specified calculators known to '
-                            'ASE and their configuration.')
+                            help='List calculators and their configuration:'
+                                 ' all known to ASE, or the ones with the given'
+                                 ' string(s) in the name')
+        parser.add_argument('--viewers', nargs='*', metavar='NAME',
+                            help='List viewers: all the known to ASE, or the '
+                                 'ones with the given string(s) in the name')
+        parser.add_argument('--plugins', nargs='*', metavar='NAME',
+                            help='List plugins: all installed, or the ones '
+                                 'with the given string(s) in the name')
 
     @staticmethod
     def run(args):
-        if args.calculators is not None:
-            from ase.codes import list_codes, codes
-            if args.calculators:
-                names = args.calculators
-            else:
-                names = [*codes]
-            list_codes(names)
-            return
-
+        print_info()
         if args.files:
             print_file_info(args)
-            return
 
-        print_info()
-        if args.formats:
+        if args.config:
             print()
-            print_formats()
+            from ase.config import cfg
+            cfg.print_everything()
+
+        for kind in ('io_formats', 'calculators', 'viewers', 'plugins'):
+            val = getattr(args, kind)
+            if val is None:
+                continue
+            print()
+            print_pluggables(kind, val or None)
 
 
 def print_file_info(args):
@@ -89,26 +101,18 @@ def print_info():
         print(f'{name:24} {path}')
 
 
-def print_formats():
-    from ase.io.formats import ioformats
+def print_pluggables(kind: str, allowed_names: Optional[List[str]] = None):
+    import ase.plugins as plugins
+    to_print = getattr(plugins, kind)
+    if allowed_names is not None:
+        allowed_names = [kind.lower() for kind in allowed_names]
 
-    print('Supported formats:')
-    for fmtname in sorted(ioformats):
-        fmt = ioformats[fmtname]
+        def filter(pluggable):
+            return any(pattern in name
+                       for (pattern, name) in
+                       product(allowed_names, pluggable.lowercase_names)
+                       )
+    else:
+        filter = None  # type: ignore[assignment]
 
-        infos = [fmt.modes, 'single' if fmt.single else 'multi']
-        if fmt.isbinary:
-            infos.append('binary')
-        if fmt.encoding is not None:
-            infos.append(fmt.encoding)
-        infostring = '/'.join(infos)
-
-        moreinfo = [infostring]
-        if fmt.extensions:
-            moreinfo.append('ext={}'.format('|'.join(fmt.extensions)))
-        if fmt.globs:
-            moreinfo.append('glob={}'.format('|'.join(fmt.globs)))
-
-        print('  {} [{}]: {}'.format(fmt.name,
-                                     ', '.join(moreinfo),
-                                     fmt.description))
+    print(to_print.info(filter=filter))
