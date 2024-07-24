@@ -8,11 +8,18 @@ from ase.atoms import Atoms
 from ase.calculators.calculator import InputError
 from ase.calculators.gaussian import Gaussian
 from ase.io import ParseError
-from ase.io.gaussian import (_get_atoms_info, _get_cartesian_atom_coords,
-                             _get_zmatrix_line, _re_chgmult, _re_link0,
-                             _re_method_basis, _re_nuclear_props,
-                             _re_output_type, _validate_symbol_string,
-                             read_gaussian_in)
+from ase.io.gaussian import (
+    _get_atoms_info,
+    _get_cartesian_atom_coords,
+    _get_zmatrix_line,
+    _re_chgmult,
+    _re_link0,
+    _re_method_basis,
+    _re_nuclear_props,
+    _re_output_type,
+    _validate_symbol_string,
+    read_gaussian_in,
+)
 
 
 # Refactoring needed.

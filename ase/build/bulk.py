@@ -3,8 +3,8 @@ from math import sqrt
 from typing import Any
 
 from ase.atoms import Atoms
+from ase.data import atomic_numbers, chemical_symbols, reference_states
 from ase.symbols import string2symbols
-from ase.data import reference_states, atomic_numbers, chemical_symbols
 from ase.utils import plural
 
 

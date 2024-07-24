@@ -5,8 +5,15 @@ import numpy as np
 import pytest
 
 from ase import Atom, Atoms
-from ase.build import (add_adsorbate, bulk, fcc111, fcc211, graphene, mx2,
-                       surface)
+from ase.build import (
+    add_adsorbate,
+    bulk,
+    fcc111,
+    fcc211,
+    graphene,
+    mx2,
+    surface,
+)
 
 
 def test_surface():

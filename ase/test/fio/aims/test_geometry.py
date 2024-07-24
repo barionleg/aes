@@ -6,9 +6,12 @@ from pytest import approx
 
 from ase.atoms import Atoms
 from ase.build import bulk
-from ase.constraints import (FixAtoms, FixCartesian,
-                             FixCartesianParametricRelations,
-                             FixScaledParametricRelations)
+from ase.constraints import (
+    FixAtoms,
+    FixCartesian,
+    FixCartesianParametricRelations,
+    FixScaledParametricRelations,
+)
 from ase.io.aims import parse_geometry_lines
 from ase.io.aims import read_aims as read
 

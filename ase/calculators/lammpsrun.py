@@ -34,8 +34,12 @@ from typing import Any, Dict
 import numpy as np
 
 from ase.calculators.calculator import Calculator, all_changes
-from ase.calculators.lammps import (CALCULATION_END_MARK, Prism, convert,
-                                    write_lammps_in)
+from ase.calculators.lammps import (
+    CALCULATION_END_MARK,
+    Prism,
+    convert,
+    write_lammps_in,
+)
 from ase.data import atomic_masses, chemical_symbols
 from ase.io.lammpsdata import write_lammps_data
 from ase.io.lammpsrun import read_lammps_dump

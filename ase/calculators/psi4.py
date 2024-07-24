@@ -11,8 +11,13 @@ from io import StringIO
 import numpy as np
 
 from ase import io
-from ase.calculators.calculator import (Calculator, CalculatorSetupError,
-                                        InputError, ReadError, all_changes)
+from ase.calculators.calculator import (
+    Calculator,
+    CalculatorSetupError,
+    InputError,
+    ReadError,
+    all_changes,
+)
 from ase.config import cfg
 from ase.units import Bohr, Hartree
 

@@ -1,4 +1,5 @@
 from math import gcd
+
 import numpy as np
 from numpy.linalg import norm, solve
 

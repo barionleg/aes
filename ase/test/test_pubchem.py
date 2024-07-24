@@ -1,6 +1,9 @@
-from ase.data.pubchem import (pubchem_atoms_conformer_search,
-                              pubchem_atoms_search, pubchem_conformer_search,
-                              pubchem_search)
+from ase.data.pubchem import (
+    pubchem_atoms_conformer_search,
+    pubchem_atoms_search,
+    pubchem_conformer_search,
+    pubchem_search,
+)
 
 
 def test_pubchem():

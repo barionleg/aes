@@ -8,8 +8,11 @@ from ase.build import molecule
 from ase.calculators.emt import EMT
 from ase.optimize import BFGS
 from ase.vibrations import Vibrations
-from ase.vibrations.franck_condon import (FranckCondon, FranckCondonOverlap,
-                                          FranckCondonRecursive)
+from ase.vibrations.franck_condon import (
+    FranckCondon,
+    FranckCondonOverlap,
+    FranckCondonRecursive,
+)
 
 
 def equal(x, y, tolerance=0, fail=True, msg=''):

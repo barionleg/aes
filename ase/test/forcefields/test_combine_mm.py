@@ -6,9 +6,8 @@ from ase import Atoms, units
 from ase.calculators.combine_mm import CombineMM
 from ase.calculators.counterions import AtomicCounterIon as ACI
 from ase.calculators.qmmm import LJInteractionsGeneral
-from ase.calculators.tip3p import TIP3P, angleHOH
+from ase.calculators.tip3p import TIP3P, angleHOH, rOH
 from ase.calculators.tip3p import epsilon0 as eps3
-from ase.calculators.tip3p import rOH
 from ase.calculators.tip3p import sigma0 as sig3
 from ase.calculators.tip4p import TIP4P
 from ase.calculators.tip4p import epsilon0 as eps4

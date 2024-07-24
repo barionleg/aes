@@ -7,8 +7,12 @@ from scipy.spatial import cKDTree
 
 from ase.cell import Cell
 from ase.data import atomic_numbers, covalent_radii
-from ase.geometry import (complete_cell, find_mic, minkowski_reduce,
-                          wrap_positions)
+from ase.geometry import (
+    complete_cell,
+    find_mic,
+    minkowski_reduce,
+    wrap_positions,
+)
 
 
 def natural_cutoffs(atoms, mult=1, **kwargs):

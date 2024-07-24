@@ -6,8 +6,7 @@ import pytest
 import ase
 from ase.build import bulk
 from ase.calculators.test import gradient_test
-from ase.filters import (ExpCellFilter, Filter, FrechetCellFilter,
-                         UnitCellFilter)
+from ase.filters import ExpCellFilter, Filter, FrechetCellFilter, UnitCellFilter
 from ase.io import Trajectory
 from ase.optimize import LBFGS, MDMin
 from ase.units import GPa

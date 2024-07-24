@@ -12,7 +12,7 @@ import numpy as np
 
 from ase.atom import Atom
 from ase.atoms import Atoms
-from ase.data import reference_states, atomic_numbers
+from ase.data import atomic_numbers, reference_states
 from ase.lattice.cubic import FaceCenteredCubic
 
 

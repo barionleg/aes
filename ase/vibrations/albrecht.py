@@ -5,8 +5,10 @@ import numpy as np
 
 import ase.units as u
 from ase.parallel import paropen, parprint
-from ase.vibrations.franck_condon import (FranckCondonOverlap,
-                                          FranckCondonRecursive)
+from ase.vibrations.franck_condon import (
+    FranckCondonOverlap,
+    FranckCondonRecursive,
+)
 from ase.vibrations.resonant_raman import ResonantRaman
 
 

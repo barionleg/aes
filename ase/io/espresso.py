@@ -23,8 +23,10 @@ import numpy as np
 
 from ase.atoms import Atoms
 from ase.calculators.calculator import kpts2ndarray, kpts2sizeandoffsets
-from ase.calculators.singlepoint import (SinglePointDFTCalculator,
-                                         SinglePointKPoint)
+from ase.calculators.singlepoint import (
+    SinglePointDFTCalculator,
+    SinglePointKPoint,
+)
 from ase.constraints import FixAtoms, FixCartesian
 from ase.data import chemical_symbols
 from ase.dft.kpoints import kpoint_convert

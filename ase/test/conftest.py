@@ -11,12 +11,16 @@ import pytest
 import ase
 from ase.config import Config, cfg
 from ase.dependencies import all_dependencies
-from ase.test.factories import CalculatorInputs, NoSuchCalculator
+from ase.test.factories import (
+    CalculatorInputs,
+    NoSuchCalculator,
+    factory_classes,
+    get_factories,
+    legacy_factory_calculator_names,
+    make_factory_fixture,
+    parametrize_calculator_tests,
+)
 from ase.test.factories import factory as factory_deco
-from ase.test.factories import (factory_classes, get_factories,
-                                legacy_factory_calculator_names,
-                                make_factory_fixture,
-                                parametrize_calculator_tests)
 from ase.utils import get_python_package_path_description, seterr, workdir
 
 helpful_message = """\

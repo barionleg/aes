@@ -32,8 +32,11 @@ from pathlib import Path
 import numpy as np
 
 from ase import Atoms
-from ase.calculators.calculator import (BaseCalculator, compare_atoms,
-                                        kpts2sizeandoffsets)
+from ase.calculators.calculator import (
+    BaseCalculator,
+    compare_atoms,
+    kpts2sizeandoffsets,
+)
 from ase.config import cfg
 from ase.dft.kpoints import BandPath
 from ase.io.castep import read_bands, read_param

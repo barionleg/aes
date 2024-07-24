@@ -2,8 +2,11 @@ import pytest
 
 from ase.constraints import FixAtoms
 from ase.lattice.cubic import FaceCenteredCubic
-from ase.md.velocitydistribution import (MaxwellBoltzmannDistribution,
-                                         Stationary, ZeroRotation)
+from ase.md.velocitydistribution import (
+    MaxwellBoltzmannDistribution,
+    Stationary,
+    ZeroRotation,
+)
 from ase.units import kB
 
 

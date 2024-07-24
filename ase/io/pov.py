@@ -764,8 +764,7 @@ class POVRAYIsosurface:
             from skimage.measure import marching_cubes
         except ImportError:
             # Old skimage (remove at some point)
-            from skimage.measure import \
-                marching_cubes_lewiner as marching_cubes
+            from skimage.measure import marching_cubes_lewiner as marching_cubes
 
         return marching_cubes(
             density_grid,

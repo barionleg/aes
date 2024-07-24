@@ -29,8 +29,11 @@ from pathlib import Path
 import numpy as np
 
 from ase import Atoms
-from ase.calculators.singlepoint import (PropertyNotImplementedError,
-                                         SinglePointCalculator)
+from ase.calculators.singlepoint import (
+    PropertyNotImplementedError,
+    SinglePointCalculator,
+)
+
 # The system json module causes memory leaks!  Use ase's own.
 # import json
 from ase.io import jsonio

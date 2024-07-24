@@ -4,6 +4,7 @@ from io import StringIO
 import numpy as np
 import pytest
 
+from ase.constraints import FixAtoms, FixCartesian
 from ase.io.castep.castep_reader import (
     _read_forces,
     _read_fractional_coordinates,
@@ -16,7 +17,6 @@ from ase.io.castep.castep_reader import (
     _set_energy_and_free_energy,
     read_castep_castep,
 )
-from ase.constraints import FixAtoms, FixCartesian
 from ase.units import GPa
 
 HEADER = """\

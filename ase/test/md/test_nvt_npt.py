@@ -6,8 +6,7 @@ from ase.build import bulk
 from ase.md.npt import NPT
 from ase.md.nptberendsen import NPTBerendsen
 from ase.md.nvtberendsen import NVTBerendsen
-from ase.md.velocitydistribution import (MaxwellBoltzmannDistribution,
-                                         Stationary)
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution, Stationary
 from ase.units import GPa, bar, fs
 
 

@@ -7,7 +7,6 @@ import numpy as np
 
 from ase import Atoms
 
-
 # A convenient table to avoid the previously used "eval"
 _tf_table = {
     '': True,  # Just the keyword is equivalent to True
