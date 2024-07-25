@@ -18,14 +18,17 @@ def read_xyz(fileobj, index):
     while len(lines) > 0:
         symbols = []
         positions = []
-        natoms = int(lines.pop(0))
+        try:  # fixes reading QM9 database
+            natoms = int(lines.pop(0))
+        except ValueError:
+            break
         lines.pop(0)  # Comment line; ignored
         for _ in range(natoms):
             line = lines.pop(0)
             symbol, x, y, z = line.split()[:4]
             symbol = symbol.lower().capitalize()
             symbols.append(symbol)
-            positions.append([float(x), float(y), float(z)])
+            positions.append([float(x.replace("*^", "e")), float(y.replace("*^", "e")), float(z.replace("*^", "e"))])
         images.append(Atoms(symbols=symbols, positions=positions))
     yield from images[index]
 
