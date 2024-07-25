@@ -189,6 +189,7 @@ def numeric_forces(atoms, d=0.001):
 
 
 def numeric_stress(atoms, d=1e-6, voigt=True):
+    '''Calculates the stress on a simulation cell using central difference with 12 calculator evaluations.'''
     stress = np.zeros((3, 3), dtype=float)
 
     cell = atoms.cell.copy()

@@ -450,6 +450,8 @@ F('mustem', 'muSTEM xtl file', '1F',
   ext='xtl')
 F('mysql', 'ASE MySQL database file', '+S',
   module='db')
+F('n2p2', 'n2p2 configuration file', '+S',
+  ext='data')
 F('netcdftrajectory', 'AMBER NetCDF trajectory file', '+S',
   magic=b'CDF')
 F('nomad-json', 'JSON from Nomad archive', '+F',
