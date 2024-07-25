@@ -31,7 +31,8 @@ class MinimaHopping:
         'timestep': 1.0,  # fs, timestep for MD simulations
         'optimizer': QuasiNewton,  # local optimizer to use
         'minima_traj': 'minima.traj',  # storage file for minima list
-        'fmax': 0.05}  # eV/A, max force for optimizations
+        'fmax': 0.05,  # eV/A, max force for optimizations
+        'opt_maxsteps': None}  # max steps during local optimization
 
     def __init__(self, atoms, **kwargs):
         """Initialize with an ASE atoms object and keyword arguments."""
@@ -258,7 +259,7 @@ class MinimaHopping:
                              trajectory='qn%05i.traj' % self._counter,
                              logfile='qn%05i.log' % self._counter) as opt:
             self._log('msg', 'Optimization: qn%05i' % self._counter)
-            opt.run(fmax=self._fmax)
+            opt.run(fmax=self._fmax, steps=self._opt_maxsteps)
             self._log('ene')
 
     def _record_minimum(self):
