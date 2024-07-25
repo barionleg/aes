@@ -24,7 +24,7 @@ def match(word, *suffixes):
 # Beginning of computer generated data:
 commands = {
     'band-structure':
-        ['-o', '--output', '-r', '--range'],
+        ['-o', '--output', '-r', '--range', '-z', '--zero'],
     'build':
         ['-M', '--magnetic-moment', '--modify', '-V', '--vacuum', '-v',
          '--vacuum0', '--unit-cell', '--bond-length', '-x',

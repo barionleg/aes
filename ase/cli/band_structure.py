@@ -18,6 +18,8 @@ def main(args, parser):
     import matplotlib.pyplot as plt
 
     bs = read_band_structure(args.calculation)
+    if args.zero:
+        bs = bs.subtract_reference()
     emin, emax = (float(e) for e in args.range)
     fig = plt.figure(args.calculation)
     ax = fig.gca()
@@ -52,6 +54,9 @@ class CLICommand:
                             metavar=('emin', 'emax'),
                             help='Default: "-3.0 3.0" '
                             '(in eV relative to Fermi level).')
+        parser.add_argument('-z', '--zero',
+                            help='Set reference (Fermi) level to zero', 
+                            action='store_true')
 
     @staticmethod
     def run(args, parser):
