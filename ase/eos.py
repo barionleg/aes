@@ -248,6 +248,10 @@ class EquationOfState:
             self.v0 = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
             self.e0 = p3(self.v0, c0, c1, c2, c3)
             self.B = (2 * c2 + 6 * c3 * self.v0) * self.v0
+        elif self.eos_string == 'antonschmidt':
+            self.v0 = self.eos_parameters[3]
+            self.B = self.eos_parameters[1]
+            self.e0 = self.func(self.v0, *self.eos_parameters)
         else:
             self.v0 = self.eos_parameters[3]
             self.e0 = self.eos_parameters[0]
