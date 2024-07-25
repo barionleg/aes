@@ -83,9 +83,10 @@ class Displacement:
         else:
             # Center cell
             N_c = self.supercell
-            self.offset = (N_c[0] // 2 * (N_c[1] * N_c[2]) +
-                           N_c[1] // 2 * N_c[2] +
-                           N_c[2] // 2)
+            # self.offset = (N_c[0] // 2 * (N_c[1] * N_c[2]) +
+            #                N_c[1] // 2 * N_c[2] +
+            #                N_c[2] // 2)
+            self.offset = np.ravel_multi_index((x // 2 for x in N_c), N_c)
         return self.offset
 
     @property
