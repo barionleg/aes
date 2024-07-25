@@ -63,11 +63,29 @@ interpreted as the Gibbs free energy. This class uses all of the energies
 given to it in the vib_energies list; this is a list as can be generated
 with the .get_energies() method of :class:`ase.vibrations.Vibrations`, but
 the user should take care that all of these energies are real
-(non-imaginary). The class :class:`HarmonicThermo` has the interface
-described below.
+(non-imaginary). If imaginary values are encountered, by default an error is
+raised. By setting ``imag_modes_handling`` to either 'remove' or 'invert', the
+imaginary modes can be deleted or multiplied by `-i`, respectively.
+The class :class:`HarmonicThermo` has the interface described below.
 
 .. autoclass:: HarmonicThermo
    :members:
+
+
+Derivations
+-----------
+
+There are some derivations of the standard procedure for calculating the
+thermodynamic properties in the harmonic limit. Currently, ASE provides a
+class :class:`QuasiHarmonicThermo` based on the quasi-Harmonic approximation
+by Cramer, Truhlar and coworkers (:doi:`10.1021/jp205508z`) and a 
+:class:`MSRRHOThermo` based on the modified
+rigid-rotor-harmonic-oscillator (msRRHO) approximation by Grimme *et al.*
+(:doi:`10.1002/chem.201200497` and :doi:`10.1039/D1SC00621E`). 
+
+.. autoclass:: QuasiHarmonicThermo
+.. autoclass:: MSRRHOThermo
+
 
 
 Hindered translator / hindered rotor model
