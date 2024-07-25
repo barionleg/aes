@@ -1,9 +1,10 @@
 """Constraints"""
 from typing import Sequence
 from warnings import warn
-
 import numpy as np
-
+from scipy.linalg import null_space, inv
+from numpy.linalg import svd
+from scipy.optimize import least_squares
 from ase import Atoms
 from ase.filters import ExpCellFilter as ExpCellFilterOld
 from ase.filters import Filter as FilterOld
@@ -33,9 +34,9 @@ __all__ = [
     'FixCartesian', 'FixBondLength', 'FixedMode',
     'FixAtoms', 'FixScaled', 'FixCom', 'FixSubsetCom', 'FixedPlane',
     'FixConstraint', 'FixedLine', 'FixBondLengths', 'FixLinearTriatomic',
-    'FixInternals', 'Hookean', 'ExternalForce', 'MirrorForce', 'MirrorTorque',
-    'FixScaledParametricRelations', 'FixCartesianParametricRelations',
-    'FixSymmetry']
+    'FixInternals', 'FixExternals', 'Hookean', 'ExternalForce', 'MirrorForce',
+    'MirrorTorque', 'FixScaledParametricRelations',
+    'FixCartesianParametricRelations', 'FixSymmetry']
 
 
 def dict2constraint(dct):
@@ -1034,7 +1035,7 @@ class FixInternals(FixConstraint):
         Identification by its definition via indices (and coefficients)."""
         self.initialize(atoms)
         for subconstr in self.constraints:
-            if isinstance(definition[0], Sequence):  # Combo constraint
+            if isinstance(definition[0], Sequence):  # identify combo constraint
                 defin = [d + [c] for d, c in zip(subconstr.indices,
                                                  subconstr.coefs)]
                 if defin == definition:
@@ -2295,6 +2296,254 @@ class MirrorTorque(FixConstraint):
                            'a3': self.indices[2], 'a4': self.indices[3],
                            'max_angle': self.max_angle,
                            'min_angle': self.min_angle, 'fmax': self.fmax}}
+
+
+class FixExternals(FixConstraint):
+    """This constraint is used to constrain the principle axes of inertia as
+    well as the center of mass of a chosen set of atoms. For a given set of N
+    atoms, where N>1, there exist 3N-6 internal degrees of freedom
+    (3N-5 if linear), and 6 external degrees of freedom (5 if linear). The
+    internal degrees of freedom are defined in terms of bond lengths, bond
+    angles, and dihedral angles. Here, the six external degrees of freedom are
+    defined in terms of the three angles formed between the principle axes and
+    the coordinate system, as well as the three components of the atoms’
+    center of mass. This class constrains a set of atoms to travel in directions
+    in which the principle axes of inertia, as well as the center of mass are
+    fixed.
+    """
+    def __init__(
+            self,
+            atoms: Atoms,
+            indices: list):
+
+        """
+atoms : ase.atoms.Atoms object
+    An Atoms object
+indices : list
+    A list of indices that will be constrained by FixExternals.
+    This list should contain 2 or more atoms.
+
+This constraint was originally envisioned to be used to constrain an
+adsorbate on a metal surface, but can be used on any system as long as
+the number of constrained atoms is greater than 1. Below is a
+hypothetical example where methanol is placed over a fixed copper
+surface and is relaxed using BFGS as the optimizer and EMT as the
+calculator:
+
+>>> from ase.calculators.emt import EMT
+>>> from ase.optimize import BFGS
+>>> from ase.constraints import FixExternals, FixAtoms
+>>> from ase.build import fcc111, add_adsorbate, molecule
+
+>>> atoms = fcc111(symbol='Cu', size=[3, 3, 4], a=3.58)
+>>> adsorbate = molecule('CH3OH')
+>>> add_adsorbate(atoms, adsorbate, 2.5, 'ontop')
+>>> atoms.center(vacuum=8.5, axis=2)
+>>> indices = [36, 37, 38, 39, 40, 41]
+>>> c1 = FixExternals(atoms, indices)
+>>> c2 = FixAtoms(indices=[atom.index for atom in atoms if atom.symbol == 'Cu'])
+>>> atoms.set_constraint([c1, c2])
+>>> atoms.calc = EMT()
+>>> dyn = BFGS(atoms)
+>>> dyn.run(fmax=0.05)
+        """
+
+        self.atoms = atoms
+        self.indices = indices
+        if len(self.indices) < 2:
+            raise ValueError('Atoms object must contain 2 or more atoms')
+        inertia_info = atoms[self.indices].get_moments_of_inertia(vectors=True)
+        self.principle_axes = np.transpose(inertia_info[1])
+        self.center_of_mass = atoms[self.indices].get_center_of_mass()
+        self.dx = 0.2
+        self.space_orthogonal_to_constraint = np.identity(3 * len(self.indices))
+
+    def rot_x(self, x):
+        """These three functions return the rotational matrices for rotation
+        about the three cartesian axes."""
+        return np.array(((np.cos(x), -np.sin(x), 0),
+                        (np.sin(x), np.cos(x), 0), (0, 0, 1)))
+
+    def rot_y(self, y):
+        return np.array(((np.cos(y), 0, np.sin(y)),
+                        (0, 1, 0), (-np.sin(y), 0, np.cos(y))))
+
+    def rot_z(self, z):
+        return np.array(((1, 0, 0), (0, np.cos(z),
+                        -np.sin(z)), (0, np.sin(z), np.cos(z))))
+
+    def sort_principle_axes(self, principle_axes: np.ndarray):
+        """Reorders the vectors corresponding the the principle axes such that
+        the the axis of the current step that forms the smallest absolute
+        dot product with the first axis of the initial structure is placed
+        first. Then the axis from the two that are left from the current step
+        that forms the smallest absolute dot product with the second axis from
+        the initial structure is placed second. The remaining unchosen axis of
+        the current step is placed last.
+
+        principle_axis : a 3 by 3 np.ndarray
+        """
+        tmp_axes = np.zeros([3, 3])
+        for i in range(3):
+            d1 = np.dot(principle_axes[:, 0], self.principle_axes[:, i])
+            d2 = np.dot(principle_axes[:, 1], self.principle_axes[:, i])
+            d3 = np.dot(principle_axes[:, 2], self.principle_axes[:, i])
+            if abs(d1) > abs(d2) and abs(d1) > abs(d3):
+                if d1 <= 0:
+                    tmp_axes[:, i] = -principle_axes[:, 0]
+                else:
+                    tmp_axes[:, i] = principle_axes[:, 0]
+                principle_axes[:, 0] = 0
+            if abs(d2) > abs(d1) and abs(d2) > abs(d3):
+                if d2 <= 0:
+                    tmp_axes[:, i] = -principle_axes[:, 1]
+                else:
+                    tmp_axes[:, i] = principle_axes[:, 1]
+                principle_axes[:, 1] = 0
+            if abs(d3) > abs(d2) and abs(d3) > abs(d1):
+                if d3 <= 0:
+                    tmp_axes[:, i] = -principle_axes[:, 2]
+                else:
+                    tmp_axes[:, i] = principle_axes[:, 2]
+                principle_axes[:, 2] = 0
+        return tmp_axes
+
+    def adjust_rotation(self, adsorbate: Atoms):
+        """Finds a rotational matrix that maps the principle axes of the
+        current structure back to those of the initial structure, and
+        multiplies this matrix by the center of mass coordinates of the
+        adsorbate.
+
+        adsorbate : ase.atoms.Atoms object
+        """
+        com = adsorbate.get_center_of_mass()
+        pos = adsorbate.get_positions()
+        pos_com = pos - com
+        principle_axes_and_moments = \
+            adsorbate.get_moments_of_inertia(vectors=True)
+        principle_axes = self.sort_principle_axes(
+            np.transpose(principle_axes_and_moments[1]))
+        A_solve = np.matmul(self.principle_axes, inv(principle_axes))
+        A_solve = A_solve.flatten()
+
+        def f(x):
+            x0, x1, x2 = x
+            A = np.dot(np.dot(self.rot_x(x2), self.rot_y(x1)), self.rot_z(x0))
+            A = A.flatten()
+            return A
+
+        def system(x, b=A_solve):
+            return (f(x) - b)
+
+        x = least_squares(system, np.asarray((0., 0., 0.)), gtol=1e-12)
+        self.angles = np.copy(x.x)
+        x0, x1, x2 = x.x
+        A = np.dot(np.dot(self.rot_x(x2), self.rot_y(x1)), self.rot_z(x0))
+        mapped_ads = np.transpose(np.matmul(A, np.transpose(pos_com)))
+        return mapped_ads + self.center_of_mass
+
+    def get_subspace(self, adsorbate: Atoms):
+        """Defines a Jacobian matrix where the first three rows are derivatives
+        of the center of mass with respect to the adsorbates 3N coordinates.
+        The last 9 rows correspond to derivatives of the entries in the three
+        positional arguments across the three principle axes with respect to
+        changes in the adsorbates 3N cartesian coordinates. Then the 3N-6 null
+        vectors associated with the smallest eigenvalues are taken to describe
+        the orthonormal space that exists outside of the constrained space.
+        It is important  to note that this way of defining the constraint traps
+        it to a linear space that changes with each geometry step.
+
+        adsorbate : ase.atoms.Atoms object
+        """
+        h = 1e-4
+        com = adsorbate.get_center_of_mass()
+        pos = adsorbate.get_positions()
+        pos_com = pos - com
+        J = np.zeros([12, 3 * len(pos)])
+        for i in range(len(pos)):
+            for j in range(3):
+                fi = np.copy(pos_com)
+                ff = np.copy(pos_com)
+                fi[i, j] = fi[i, j] - h
+                ff[i, j] = ff[i, j] + h
+                fi_ads = adsorbate.copy()
+                ff_ads = adsorbate.copy()
+                ff_ads.positions = ff
+                fi_ads.positions = fi
+                fi_com = fi_ads.get_center_of_mass()
+                ff_com = ff_ads.get_center_of_mass()
+                fi_inert = fi_ads.get_moments_of_inertia(vectors=True)
+                fi_Ivec = self.sort_principle_axes(np.transpose(fi_inert[1]))
+                ff_inert = ff_ads.get_moments_of_inertia(vectors=True)
+                ff_Ivec = self.sort_principle_axes(np.transpose(ff_inert[1]))
+                J[0, (3 * i + j)] = (ff_com[0] - fi_com[0]) / (2. * h)
+                J[1, (3 * i + j)] = (ff_com[1] - fi_com[1]) / (2. * h)
+                J[2, (3 * i + j)] = (ff_com[2] - fi_com[2]) / (2. * h)
+                J[3, (3 * i + j)] = (ff_Ivec[0, 0] - fi_Ivec[0, 0]) / (2. * h)
+                J[4, (3 * i + j)] = (ff_Ivec[0, 1] - fi_Ivec[0, 1]) / (2. * h)
+                J[5, (3 * i + j)] = (ff_Ivec[0, 2] - fi_Ivec[0, 2]) / (2. * h)
+                J[6, (3 * i + j)] = (ff_Ivec[1, 0] - fi_Ivec[1, 0]) / (2. * h)
+                J[7, (3 * i + j)] = (ff_Ivec[1, 1] - fi_Ivec[1, 1]) / (2. * h)
+                J[8, (3 * i + j)] = (ff_Ivec[1, 2] - fi_Ivec[1, 2]) / (2. * h)
+                J[9, (3 * i + j)] = (ff_Ivec[2, 0] - fi_Ivec[2, 0]) / (2. * h)
+                J[10, (3 * i + j)] = (ff_Ivec[2, 1] - fi_Ivec[2, 1]) / (2. * h)
+                J[11, (3 * i + j)] = (ff_Ivec[2, 2] - fi_Ivec[2, 2]) / (2. * h)
+
+        u, s, v = svd(J)
+        if len(self.indices) == 2:
+            rcond = np.mean(s[4:6]) / s[0]
+        else:
+            rcond = np.mean(s[5:7]) / s[0]
+        J_sub = null_space(J, rcond)
+        self.space_orthogonal_to_constraint = J_sub
+        return J_sub
+
+    def adjust_positions(self, atoms, newpositions):
+        """First this function identifies the step that was taken in 3N space
+        and projects out the portion of the step that was taken outside of the
+        current steps constrained space. This step is critical when using second
+        order optimizers! The identified step is then scaled down and rotated
+        such that its principle axes are identical to the initial structure and
+        the that the largest atomic displacement after rotation remains
+        smaller than 0.2 angstroms"""
+        indx = self.indices
+        dpos = np.copy(newpositions - atoms.positions)
+        dpos_1D = dpos[indx, :].reshape(-1)
+        tmp_dpos = np.zeros(3 * len(indx))
+        for i in range(np.shape(self.space_orthogonal_to_constraint)[1]):
+            coef = np.copy(np.dot(
+                self.space_orthogonal_to_constraint[:, i], dpos_1D))
+            tmp_dpos += (coef * self.space_orthogonal_to_constraint[:, i])
+        dpos[indx, :] = tmp_dpos.reshape(-1, 3)
+        ads_ref = atoms[indx].copy()
+        ads_ref.positions += dpos[indx, :]
+        ads_ref.positions = np.copy(self.adjust_rotation(ads_ref))
+        maxstep = np.max(abs(ads_ref.positions - atoms.positions[indx]))
+        dxstep = 0
+        while maxstep >= 0.2:
+            scale = (0.2 / maxstep)
+            dxstep += 1
+            dpos *= scale
+            ads_ref.positions = np.copy(atoms.positions[indx] + dpos[indx])
+            ads_ref.positions = np.copy(self.adjust_rotation(ads_ref))
+            maxstep = np.max(abs(ads_ref.positions - atoms.positions[indx]))
+        newpositions[indx] = ads_ref.positions
+        self.dx = np.mean(abs(newpositions - atoms.positions))
+        return newpositions
+
+    def adjust_forces(self, atoms, forces):
+        """The components of the force vector that exist outside of the current
+        steps constrained space are projected out."""
+        indx = self.indices
+        ads_ref = atoms[indx].copy()
+        J_sub = self.get_subspace(ads_ref)
+        forces_1D = forces[indx, :].reshape(-1)
+        tmp_forces = np.zeros(3 * len(ads_ref))
+        for i in range(np.shape(J_sub)[1]):
+            coef = np.copy(np.dot(J_sub[:, i], forces_1D))
+            tmp_forces += (coef * J_sub[:, i])
+        forces[indx, :] = tmp_forces.reshape(-1, 3)
+        return forces
 
 
 class FixSymmetry(FixConstraint):

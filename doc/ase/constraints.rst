@@ -415,3 +415,8 @@ unsymmetrised case relaxes to fcc, while the constraint keeps the original
 symmetry.
 
 .. literalinclude:: fix_symmetry_example.py
+
+The FixExternals class
+======================
+
+.. autoclass:: ase.constraints.FixExternals
