@@ -1288,7 +1288,18 @@ class Atoms:
             I.e., about=(0., 0., 0.) (or just "about=0.", interpreted
             identically), to center about the origin.
         """
+        def circular_mean(coords):
+            # circular mean of the coordinates, to be used instead of the center of mass
+            sinus = np.sin(2 * np.pi * coords).sum(axis=0)
+            cosinus = np.cos(2 * np.pi * coords).sum(axis=0)
+            return (np.arctan2(-sinus, -cosinus) + np.pi) / (2.0 * np.pi)
 
+        # First move the atoms to the center (circular mean) of the cell
+        circ_mean = circular_mean(self.get_scaled_positions()) * np.diag(self.get_cell())
+        cell_center = np.diag(self.get_cell()) / 2.0
+        self.translate(cell_center - circ_mean)
+        self.wrap()
+        
         # Find the orientations of the faces of the unit cell
         cell = self.cell.complete()
         dirs = np.zeros_like(cell)
