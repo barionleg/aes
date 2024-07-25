@@ -134,7 +134,7 @@ def read_orca_output(fd):
     results['energy'] = energy
     results['free_energy'] = energy
 
-    if dipole is not None:
+    if com is not None and dipole is not None:
         dipole = dipole + com * charge
         results['dipole'] = dipole
 
