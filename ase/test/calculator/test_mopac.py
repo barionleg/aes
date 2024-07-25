@@ -52,3 +52,12 @@ def test_mopac_forces_consistent(mopac_factory):
     forces = ch4.get_forces()
 
     assert_allclose(forces.sum(axis=0), [0, 0, 0], atol=1e-7)
+
+
+@pytest.mark.calculator
+def test_mopac_force_keyword(mopac_factory):
+    """Check FORCE calculation doesn't break the parser"""
+
+    ch4 = molecule('CH4')
+    ch4.calc = mopac_factory.calc(task='FORCE', method='PM7')
+    ch4.get_potential_energy()
