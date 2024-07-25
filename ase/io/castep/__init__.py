@@ -831,13 +831,17 @@ def read_castep_geom(fd, index=None, units=units_CODATA2002):
             cell = [x.split()[0:3] for x in txt[i + 1:i + 4]]
             cell = np.array([[float(col) * Bohr for col in row] for row in
                              cell])
-        if line.find('<-- R') > 0 and start_found:
+        if line.find('<-- S') > 0 and start_found:
             start_found = False
-            geom_start = i
+            stress_start = i 
+            geom_start = stress_start + 3  # stress matrix has 3 rows 
             for i, line in enumerate(txt[geom_start:]):
                 if line.find('<-- F') > 0:
                     geom_stop = i + geom_start
                     break
+            stress = np.array([[float(col) * Hartree/Bohr**3 for col in
+                    line.split()[:3]] for line in
+                    txt[stress_start:geom_start]])
             species = [line.split()[0] for line in
                        txt[geom_start:geom_stop]]
             geom = np.array([[float(col) * Bohr for col in
@@ -849,7 +853,7 @@ def read_castep_geom(fd, index=None, units=units_CODATA2002):
                                    + (geom_stop - geom_start)]])
             image = ase.Atoms(species, geom, cell=cell, pbc=True)
             image.calc = SinglePointCalculator(
-                atoms=image, energy=energy, forces=forces)
+                atoms=image, energy=energy, forces=forces, stress=stress)
             traj.append(image)
 
     if index is None:
