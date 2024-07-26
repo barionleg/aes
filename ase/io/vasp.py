@@ -485,6 +485,16 @@ def read_vasp_xml(filename='vasprun.xml', index=-1):
                         dipole = np.array(
                             [float(val) for val in dblock.text.split()])
 
+                # ! added to get 'true' free energy when PSTRESS keyword is
+                # ! present, not enthalpy
+                elif elem.tag == 'incar':
+                    try:
+                        elem.find('i[@name="PSTRESS"]').text
+                    except AttributeError:
+                        pstress = False
+                    else:
+                        pstress = True
+
             elif event == 'start' and elem.tag == 'calculation':
                 calculation.append(elem)
 
@@ -517,11 +527,19 @@ def read_vasp_xml(filename='vasprun.xml', index=-1):
         else:
             lastdipole = None
 
-        de = (float(lastscf.find('i[@name="e_0_energy"]').text) -
-              float(lastscf.find('i[@name="e_fr_energy"]').text))
+        # ! if PSTRESS keyword is pressent calculation/scstep/energy will
+        # ! contain enthalpy not energy!
+        if pstress:
+            energy = float(lastscf.find('i[@name="e_0_energy"]').text)
+            free_energy = float(lastscf.find('i[@name="e_fr_energy"]').text)
+        else:
+            # this is inconsistent with output of read_vasp_out function when
+            # PSTRESS keyword is pressent in incar
+            de = (float(lastscf.find('i[@name="e_0_energy"]').text) -
+                  float(lastscf.find('i[@name="e_fr_energy"]').text))
 
-        free_energy = float(step.find('energy/i[@name="e_fr_energy"]').text)
-        energy = free_energy + de
+            free_energy = float(step.find('energy/i[@name="e_fr_energy"]').text)
+            energy = free_energy + de
 
         cell = np.zeros((3, 3), dtype=float)
         for i, vector in enumerate(
