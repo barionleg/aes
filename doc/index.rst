@@ -42,7 +42,7 @@ Supported :mod:`Calculators <ase.calculators>`
 |fhi-aims| |fleur| |gamess_us| |gpaw| |gromacs|
 |hotbit| |jdftx| |kim| |lammps| |nwchem|
 |octopus| |onetep| |openmx| |plumed|  |psi4| |qchem| |q_espresso| |siesta| |turbomole| |vasp|
-|xtb| |orca|
+|xtb| |orca| |conquest|
 :mod:`ACE-Molecule <ase.calculators.acemolecule>`
 :mod:`~ase.calculators.amber`
 :mod:`DMol³ <ase.calculators.dmol>`
@@ -311,6 +311,9 @@ Contents
    :align: middle
 .. |orca| image:: static/orca_logo_mpi.png
    :target: ase/calculators/orca.html
+   :align: middle
+.. |conquest| image:: static/conquest.png
+   :target: ase/calculators/conquest.html
    :align: middle
 
 .. _Mopac: ase/calculators/mopac.html

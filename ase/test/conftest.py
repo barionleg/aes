@@ -248,13 +248,13 @@ def factories(pytestconfig):
 abinit_factory = make_factory_fixture('abinit')
 cp2k_factory = make_factory_fixture('cp2k')
 dftb_factory = make_factory_fixture('dftb')
+conquest_factory = make_factory_fixture('conquest')
 espresso_factory = make_factory_fixture('espresso')
 gpaw_factory = make_factory_fixture('gpaw')
 mopac_factory = make_factory_fixture('mopac')
 octopus_factory = make_factory_fixture('octopus')
 siesta_factory = make_factory_fixture('siesta')
 orca_factory = make_factory_fixture('orca')
-
 
 def make_dummy_factory(name):
     @factory_deco(name)
