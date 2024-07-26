@@ -515,7 +515,12 @@ F('xtd', 'Materials Studio file', '+F')
 # xyz: No `ext='xyz'` in the definition below.
 #      The .xyz files are handled by the extxyz module by default.
 F('xyz', 'XYZ-file', '+F')
-
+F('pwmat', "PWmat atom.config/final.config", '1F',
+  ext="atom.config", glob=['*.config*'])
+F('pwmat-in', 'PWmat etot.input file', '1F',
+  module='pwmat', ext='input')
+F('pwmat-report', 'PWmat REPORT output file', '+F',
+  module='pwmat', glob='*REPORT*')
 # Register IO formats exposed through the ase.ioformats entry point
 register_external_io_formats('ase.ioformats')
 
