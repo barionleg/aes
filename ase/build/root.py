@@ -35,6 +35,8 @@ def fcc111_root(symbol, root, size, a=None,
                    a=a, vacuum=vacuum, orthogonal=orthogonal)
     atoms = root_surface(atoms, root)
     atoms *= (size[0], size[1], 1)
+
+    atoms = correctoverlap(atoms)
     return atoms
 
 
@@ -203,3 +205,35 @@ def root_surface(primitive_slab, root, eps=1e-8):
     atoms.cell = new_cell
     atoms.positions = new_positions
     return atoms
+
+
+def correctoverlap(atomsvar, overlap_threshold = 0.005):
+    """Function to check for and remove overlapping atoms
+
+    atomsvar:  atoms type object to be checked for overlap
+
+    overlap_threshold: minimum distance between two atoms
+                        one atom will be removed if distance is under this value
+
+
+    """
+
+    #constant large distance always larger than overlap_threshold
+    constantval = 10 + overlap_threshold
+
+    #mask for lower triangular part of distance matrix
+    lowermask = np.tril_indices(len(atomsvar))
+
+
+    matvals = atomsvar.get_all_distances(mic=True)
+
+    #ignore lower triangular part so only one distance per pair of atoms is considered
+    matvals[lowermask] = constantval
+
+    #get index of one atom per pair of atoms that overlap one another
+    indexlist = np.where(matvals < overlap_threshold )[1]
+
+    #remove one of the atoms for each pair of overlapping atoms
+    del atomsvar[indexlist]
+
+    return atomsvar
