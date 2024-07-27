@@ -59,12 +59,13 @@ class HarmonicPlusLennardJones(LennardJones):
     Only works for structures consisting of a series
     of molecular dimers and with only one element.
     """
-    implemented_properties = ['energy', 'forces', 'stress']
-    default_parameters = {'k': 1.0, 'r0': 1.0}
+    implemented_properties = ['energy', 'forces', 'free_energy', 'stress']
     nolabel = True
 
-    def __init__(self, **kwargs):
+    def __init__(self, k=1.0, r0=1.0, **kwargs):
         LennardJones.__init__(self, **kwargs)
+        self.parameters.k = k
+        self.parameters.r0 = r0
 
     def calculate(self, atoms=None,
                   properties=['energy'],
@@ -109,11 +110,10 @@ class HarmonicPlusLennardJones(LennardJones):
             forces[a2] += -f
             stress += -np.dot(np.array([f]).T, np.array([d]))
 
-        if 'stress' in properties:
-            stress += stress.T.copy()
-            stress *= -0.5 / self.atoms.get_volume()
-            self.results['stress'] += stress.flat[[0, 4, 8, 5, 2, 1]]
-
         self.results['energy'] += energy
         self.results['free_energy'] += energy
         self.results['forces'] += forces
+
+        stress += stress.T.copy()
+        stress *= -0.5 / self.atoms.get_volume()
+        self.results['stress'] += stress.flat[[0, 4, 8, 5, 2, 1]]
