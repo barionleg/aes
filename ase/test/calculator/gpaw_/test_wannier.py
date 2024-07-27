@@ -314,11 +314,11 @@ def test_md_min():
 def test_rotation_from_projection(rng):
     proj_nw = rng.random((6, 4))
     assert unitarity_error(proj_nw[:int(min(proj_nw.shape))]) > 1
-    U_ww, C_ul = rotation_from_projection(proj_nw, fixed=2, ortho=True)
+    U_ww, C_ul = rotation_from_projection(proj_nw, fixed_m=2, ortho=True)
     assert unitarity_error(U_ww) < 1e-10, 'U_ww not unitary'
     assert orthogonality_error(C_ul.T) < 1e-10, 'C_ul columns not orthogonal'
     assert normalization_error(C_ul) < 1e-10, 'C_ul not normalized'
-    U_ww, C_ul = rotation_from_projection(proj_nw, fixed=2, ortho=False)
+    U_ww, C_ul = rotation_from_projection(proj_nw, fixed_m=2, ortho=False)
     assert normalization_error(U_ww) < 1e-10, 'U_ww not normalized'
 
 
@@ -765,9 +765,9 @@ def test_scdm(ti_calculator):
         for n in range(nbands):
             pseudo_nkG[n, k] = calc.get_pseudo_wave_function(
                 band=n, kpt=k, spin=0).ravel()
-    fixed_k = [Nw - 2] * number_kpts
+    fixed_km = [range(Nw - 2)] * number_kpts
     C_kul, U_kww = scdm(pseudo_nkG, kpts=kpt_kc,
-                        fixed_k=fixed_k, Nw=Nw)
+                        fixed_km=fixed_km, Nw=Nw)
     for k in range(number_kpts):
         assert unitarity_error(U_kww[k]) < 1e-10, 'U_ww not unitary'
         assert orthogonality_error(C_kul[k].T) < 1e-10, \
@@ -813,3 +813,36 @@ def test_spread_contributions(wan):
     test_values_w = wan1._spread_contributions()
     ref_values_w = [2.28535569, 0.04660427]
     assert test_values_w == pytest.approx(ref_values_w, abs=1e-4)
+
+
+def test_fixed_band(wan, si_calculator):
+    band_idx = 3
+    wanf = wan(calc=si_calculator, initialwannier='bloch', nwannier=1,
+               full_calc=True, fixedstates=range(band_idx, band_idx + 1))
+    wanf.localize()
+    Nk = wanf.Nk
+    for ik in range(Nk):
+        Edft = si_calculator.get_eigenvalues(ik)[band_idx]
+        Ewan, _ = np.linalg.eigh(wanf.get_hamiltonian(ik))
+        assert np.allclose(Edft, Ewan)
+
+
+def test_fixed_energywindow(wan, si_calculator):
+    Emin = -2
+    Emax = 2
+    wanf = wan(calc=si_calculator, initialwannier='bloch', nwannier=6,
+               full_calc=True, fixedenergy=[Emin, Emax])
+    wanf.localize()
+    Nk = wanf.Nk
+    lumo = wanf.calcdata.lumo
+    for ik in range(Nk):
+        Edft_n = si_calculator.get_eigenvalues(ik)
+        Ewan_n, _ = np.linalg.eigh(wanf.get_hamiltonian(ik))
+        for Edft in Edft_n:
+            if (lumo + Emin) <= Edft < (lumo + Emax):
+                Edif = np.min(np.abs(Edft - Ewan_n))
+                assert np.allclose(Edif, 0)
+
+    with pytest.raises(ValueError, match=r'^Not enough Wannier functions'):
+        wanf = wan(calc=si_calculator, initialwannier='bloch', nwannier=2,
+                   full_calc=True, fixedenergy=[Emin, Emax])
