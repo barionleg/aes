@@ -979,7 +979,8 @@ def save_calc_results(atoms, calc=None, calc_prefix=None,
     for prop, value in calc_use.results.items():
         if prop in per_config_properties:
             per_config_results[calc_prefix + prop] = value
-        elif prop in per_atom_properties:
+        elif (prop in per_atom_properties and len(value.shape) >= 1
+              and value.shape[0] == len(atoms)):
             per_atom_results[calc_prefix + prop] = value
 
     if not force:
