@@ -18,8 +18,13 @@ class TurbomoleParameters(dict):
     available_functionals = [
         'slater-dirac-exchange', 's-vwn', 'vwn', 's-vwn_Gaussian', 'pwlda',
         'becke-exchange', 'b-lyp', 'b-vwn', 'lyp', 'b-p', 'pbe', 'tpss',
-        'bh-lyp', 'b3-lyp', 'b3-lyp_Gaussian', 'pbe0', 'tpssh', 'lhf', 'oep',
-        'b97-d', 'b2-plyp'
+        'bh-lyp', 'b3-lyp', 'b3-lyp_Gaussian', 'pbe0', 'tpssh', 'pw6b96',
+        'm06', 'm06-l', 'm06-2x', 'b97-d', 'pbeh-3c', 'b97-3c',
+        'lh07t-svwn', 'lh07s-svwn', 'lh12ct-ssirpw92', 'lh12ct-ssifpw92',
+        'lh14t-calpbe', 'lh20t', 'b2-plyp', 'hse06', 'cam-b3lyp', 'wb97x', 
+        'wb97x-d', 'wb97x-v', 'wb97m-v', 'm11', 'revm11', 'mn12-sx', 'mn15',
+        'm15-l', 'revtpss', 'pkzb', 'r2scan', 'r2scan-3c', 'scan-libxc', 
+        'r2scan-libxc', 'r2scan-3c-libxc'
     ]
 
     # nested dictionary with parameters attributes
@@ -105,7 +110,16 @@ class TurbomoleParameters(dict):
             'units': None,
             'updateable': True
         },
-        'energy convergence': {
+        'dispersion correction': {
+            'comment': None,
+            'default': 'off',
+            'group': 'dsp',
+            'key': 'dispersion',
+            'type': str,
+            'units': None,
+            'updateable': True
+       },
+       'energy convergence': {
             'comment': 'jobex -energy <int>',
             'default': None,
             'group': None,
@@ -572,6 +586,10 @@ class TurbomoleParameters(dict):
             if self['point group'] != 'c1':
                 raise NotImplementedError('Point group not impemeneted')
 
+        numforce_functionals = ['b97-d', 'pbeh-3c', 'b97-3c', 'revtpss','r2scan', 'r2scan-3c']
+        if self['density functional'] in numforce_functionals:
+            self.update({"numerical hessian": {'delta': 0.02}})
+
     def get_define_str(self, natoms):
         """construct a define string from the parameters dictionary"""
 
@@ -582,7 +600,7 @@ class TurbomoleParameters(dict):
             '\n__title__\na coord\n__inter__\n'
             'bb all __basis_set__\n*\neht\n__eht_aos_str__y\n__charge_str__'
             '__occ_str____single_atom_str____norb_str____dft_str____ri_str__'
-            '__scfiterlimit____fermi_str____damp_str__q\n'
+            '__scfiterlimit____fermi_str____damp_str____dsp_str__q\n'
         )
 
         params = self
@@ -677,6 +695,23 @@ class TurbomoleParameters(dict):
 
         eht_aos_str = 'y\n' if params['default eht atomic orbitals'] else ''
 
+        dsp_str = ''
+        if params['dispersion correction']:
+            # Adjusting dispersion corrections to specficic needs of particular functionals
+            if params['density functional'] in ['b3-lyp_Gaussian','b97-d', 'lh20t', 'hse06', 
+                                                'wb97x-d', 'wb97x-v', 'wb97m-v', 'm11', 'revm11', 'mn12-sx',
+                                                'mn15', 'm15-l', 'pkzb', 'scan-libxc']:
+                print('Dispersion corrections turned off')
+                dsp_str = '\n'
+            elif params['density functional'] in ['pbeh-3c', 'b97-3c']:
+                print('Dispersion corrections set to D3 with BJ damping')
+                dsp_str = 'dsp\nbj\n*\n'
+            elif params['density functional'] in ['revtpss', 'r2scan', 'r2scan-3c']:
+                print('Dispersion corrections set to D4')
+                dsp_str = 'dsp\nd4\n*\n'
+            else:
+                dsp_str = 'dsp\n' + params['dispersion correction'] + '\n*\n'
+
         define_str = define_str_tpl
         define_str = re.sub('__title__', params['title'], define_str)
         define_str = re.sub('__basis_set__', params['basis set name'],
@@ -693,6 +728,7 @@ class TurbomoleParameters(dict):
         define_str = re.sub('__fermi_str__', fermi_str, define_str)
         define_str = re.sub('__damp_str__', damp_str, define_str)
         define_str = re.sub('__eht_aos_str__', eht_aos_str, define_str)
+        define_str = re.sub('__dsp_str__', dsp_str, define_str)
 
         return define_str
 

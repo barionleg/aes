@@ -359,6 +359,7 @@ class Turbomole(Calculator):
                     add_data_group(dg, raw=True)
                 execute(['aoforce'])
             else:
+                self.get_forces(atoms)
                 nforce_cmd = ['NumForce']
                 pdict = self.parameters['numerical hessian']
                 if self.parameters['use resolution of identity']:
