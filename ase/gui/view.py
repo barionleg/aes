@@ -54,34 +54,6 @@ def get_cell_coordinates(cell, shifted=False):
     return B1, B2
 
 
-def get_bonds(atoms, covalent_radii):
-    from ase.neighborlist import NeighborList
-    nl = NeighborList(covalent_radii * 1.5,
-                      skin=0, self_interaction=False)
-    nl.update(atoms)
-    nbonds = nl.nneighbors + nl.npbcneighbors
-
-    bonds = np.empty((nbonds, 5), int)
-    if nbonds == 0:
-        return bonds
-
-    n1 = 0
-    for a in range(len(atoms)):
-        indices, offsets = nl.get_neighbors(a)
-        n2 = n1 + len(indices)
-        bonds[n1:n2, 0] = a
-        bonds[n1:n2, 1] = indices
-        bonds[n1:n2, 2:] = offsets
-        n1 = n2
-
-    i = bonds[:n2, 2:].any(1)
-    pbcbonds = bonds[:n2][i]
-    bonds[n2:, 0] = pbcbonds[:, 1]
-    bonds[n2:, 1] = pbcbonds[:, 0]
-    bonds[n2:, 2:] = -pbcbonds[:, 2:]
-    return bonds
-
-
 class View:
     def __init__(self, rotations):
         self.colormode = 'jmol'  # The default colors
@@ -151,7 +123,7 @@ class View:
         if self.showing_bonds():
             atomscopy = atoms.copy()
             atomscopy.cell *= self.images.repeat[:, np.newaxis]
-            bonds = get_bonds(atomscopy, self.get_covalent_radii(atoms))
+            bonds = self.get_bonds(atomscopy)
         else:
             bonds = np.empty((0, 5), int)
 
@@ -191,6 +163,34 @@ class View:
                 b *= 1.0 - x0 - x1
                 b[bonds[:, 2:].any(1)] *= 0.5
                 self.B[ncellparts:] = self.X_bonds + b
+
+    def get_bonds(self, atoms):
+        from ase.neighborlist import NeighborList
+        covalent_radii = self.get_covalent_radii(atoms)
+        nl = NeighborList(covalent_radii * 1.5,
+                          skin=0, self_interaction=False)
+        nl.update(atoms)
+        nbonds = nl.nneighbors + nl.npbcneighbors
+
+        bonds = np.empty((nbonds, 5), int)
+        if nbonds == 0:
+            return bonds
+
+        n1 = 0
+        for a in range(len(atoms)):
+            indices, offsets = nl.get_neighbors(a)
+            n2 = n1 + len(indices)
+            bonds[n1:n2, 0] = a
+            bonds[n1:n2, 1] = indices
+            bonds[n1:n2, 2:] = offsets
+            n1 = n2
+
+        i = bonds[:n2, 2:].any(1)
+        pbcbonds = bonds[:n2][i]
+        bonds[n2:, 0] = pbcbonds[:, 1]
+        bonds[n2:, 1] = pbcbonds[:, 0]
+        bonds[n2:, 2:] = -pbcbonds[:, 2:]
+        return bonds
 
     def showing_bonds(self):
         return self.window['toggle-show-bonds']
