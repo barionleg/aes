@@ -244,7 +244,7 @@ class Dftb(FileIOCalculator):
 
         if self.do_forces:
             params['Analysis_'] = ''
-            params['Analysis_CalculateForces'] = 'Yes'
+            params['Analysis_PrintForces'] = 'Yes'
 
         # --------MAIN KEYWORDS-------
         previous_key = 'dummy_'
