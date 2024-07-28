@@ -973,7 +973,7 @@ class Atoms:
         if self._celldisp.any():
             d['celldisp'] = self._celldisp
         if self.constraints:
-            d['constraints'] = self.constraints
+            d['constraints'] = [c.todict() for c in self.constraints]
         if self.info:
             d['info'] = self.info
         # Calculator...  trouble.
