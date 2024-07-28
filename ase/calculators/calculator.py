@@ -525,8 +525,7 @@ class BaseCalculator(GetPropertiesMixin):
             system_changes = self.check_state(atoms)
 
             if system_changes:
-                self.atoms = None
-                self.results = {}
+                self.reset()
 
         if name not in self.results:
             if not allow_calculation:
@@ -568,6 +567,11 @@ class BaseCalculator(GetPropertiesMixin):
     @property
     def name(self) -> str:
         return self._get_name()
+    
+    def reset(self):
+        """Clear all information from old calculation."""
+        self.atoms = None
+        self.results = {}
 
 
 class Calculator(BaseCalculator):
@@ -766,12 +770,6 @@ class Calculator(BaseCalculator):
                     continue
             dct[key] = value
         return dct
-
-    def reset(self):
-        """Clear all information from old calculation."""
-
-        self.atoms = None
-        self.results = {}
 
     def read(self, label):
         """Read atoms, parameters and calculated properties from output file.
