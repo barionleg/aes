@@ -587,7 +587,7 @@ def write_control(fd, atoms, parameters, verbose_header=False):
             fd.write(format_aims_control_parameter(key, value, "%r"))
 
     if cubes:
-        cubes.write(fd)
+        fd.write(cubes)
 
     fd.write(lim + "\n\n")
 
